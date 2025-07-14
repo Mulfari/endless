@@ -1,16 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
-const heroImages = [
-  "/herosection/1.jpeg",
-  "/herosection/2.jpeg",
-  "/herosection/3.jpeg",
-];
-
 export default function Home() {
+  const heroImages = [
+    "/herosection/1.jpeg",
+    "/herosection/2.jpeg",
+    "/herosection/3.jpeg",
+  ];
+  const [current, setCurrent] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % heroImages.length);
+    }, 7000);
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
   return (
     <div className="min-h-screen bg-white">
       {/* Header/Navigation */}
@@ -49,29 +55,13 @@ export default function Home() {
       {/* Hero Section pantalla completa con carrusel de imágenes de fondo */}
       <section className="relative w-full min-h-screen flex items-center justify-center bg-black">
         {/* Carrusel de imágenes de fondo */}
-        {(() => {
-          const heroImages = [
-            "/herosection/1.jpeg",
-            "/herosection/2.jpeg",
-            "/herosection/3.jpeg",
-          ];
-          const [current, setCurrent] = useState(0);
-          useEffect(() => {
-            const interval = setInterval(() => {
-              setCurrent((prev) => (prev + 1) % heroImages.length);
-            }, 7000);
-            return () => clearInterval(interval);
-          }, []);
-          return (
-            <Image
-              src={heroImages[current]}
-              alt="Fondo Hero"
-              fill
-              className="object-cover object-center absolute inset-0 z-0 transition-opacity duration-1000"
-              priority
-            />
-          );
-        })()}
+        <Image
+          src={heroImages[current]}
+          alt="Fondo Hero"
+          fill
+          className="object-cover object-center absolute inset-0 z-0 transition-opacity duration-1000"
+          priority
+        />
         {/* Overlay oscuro */}
         <div className="absolute inset-0 bg-black/50 z-10" />
         {/* Contenido centrado premium */}
