@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 
 const heroImages = [
   "/herosection/1.jpeg",
@@ -21,7 +22,7 @@ function HeroCarouselPremium() {
   return (
     <div className="relative w-full h-[420px] md:h-[520px] rounded-2xl overflow-hidden shadow-xl mb-10 flex items-end justify-start">
       {heroImages.map((img, idx) => (
-        <img
+        <Image
           key={img}
           src={img}
           alt="Hero"
@@ -124,7 +125,7 @@ function DestinosCarrusel() {
             className="min-w-[320px] md:min-w-[420px] max-w-[90vw] md:max-w-[420px] h-[420px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl bg-gray-900 relative flex-shrink-0 group cursor-pointer transition-transform duration-300 hover:scale-105"
             style={{ scrollSnapAlign: "center" }}
           >
-            <img
+            <Image
               src={destino.imagen}
               alt={destino.nombre}
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 z-0"
@@ -211,7 +212,7 @@ export default function Home() {
           {/* Santorini */}
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="md:w-1/2 w-full rounded-3xl overflow-hidden shadow-2xl">
-              <img src="/herosection/1.jpeg" alt="Santorini, Grecia" className="w-full h-96 object-cover" />
+              <Image src="/herosection/1.jpeg" alt="Santorini, Grecia" width={500} height={300} />
             </div>
             <div className="md:w-1/2 w-full flex flex-col items-start">
               <h3 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">Santorini: El Encanto del Mediterráneo</h3>
@@ -221,7 +222,7 @@ export default function Home() {
           {/* Maldivas */}
           <div className="flex flex-col md:flex-row-reverse items-center gap-12">
             <div className="md:w-1/2 w-full rounded-3xl overflow-hidden shadow-2xl">
-              <img src="/herosection/2.jpeg" alt="Maldivas" className="w-full h-96 object-cover" />
+              <Image src="/herosection/2.jpeg" alt="Maldivas" width={500} height={300} />
             </div>
             <div className="md:w-1/2 w-full flex flex-col items-start">
               <h3 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">Maldivas: Paraíso Sobre el Agua</h3>
@@ -231,7 +232,7 @@ export default function Home() {
           {/* Aspen */}
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="md:w-1/2 w-full rounded-3xl overflow-hidden shadow-2xl">
-              <img src="/herosection/3.jpeg" alt="Aspen, Colorado" className="w-full h-96 object-cover" />
+              <Image src="/herosection/3.jpeg" alt="Aspen, Colorado" width={500} height={300} />
             </div>
             <div className="md:w-1/2 w-full flex flex-col items-start">
               <h3 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">Aspen: Lujo Entre Montañas</h3>
@@ -262,19 +263,19 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 grid-rows-6 md:grid-rows-3 gap-6">
             <div className="relative row-span-2 md:row-span-3 md:col-span-1 rounded-3xl overflow-hidden shadow-2xl group">
-              <img src="/herosection/4.jpeg" alt="Jet Privado" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <Image src="/herosection/4.jpeg" alt="Jet Privado" width={400} height={300} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 group-hover:opacity-70 transition-opacity duration-500" />
             </div>
             <div className="relative md:col-span-2 md:row-span-2 rounded-3xl overflow-hidden shadow-2xl group">
-              <img src="/herosection/5.jpeg" alt="Experiencia Selva" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <Image src="/herosection/5.jpeg" alt="Experiencia Selva" width={400} height={300} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-50 group-hover:opacity-60 transition-opacity duration-500" />
             </div>
             <div className="relative rounded-3xl overflow-hidden shadow-2xl group">
-              <img src="/herosection/6.jpeg" alt="Aventura Desierto" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <Image src="/herosection/6.jpeg" alt="Aventura Desierto" width={400} height={300} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-40 group-hover:opacity-50 transition-opacity duration-500" />
             </div>
             <div className="relative rounded-3xl overflow-hidden shadow-2xl group">
-              <img src="/herosection/7.jpeg" alt="Villa sobre el agua" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <Image src="/herosection/7.jpeg" alt="Villa sobre el agua" width={400} height={300} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-40 group-hover:opacity-50 transition-opacity duration-500" />
             </div>
           </div>
