@@ -72,87 +72,6 @@ function HeroCarouselPremium() {
   );
 }
 
-// Carrusel de destinos destacado
-function DestinosCarrusel() {
-  const destinos = [
-    {
-      nombre: "Santorini, Grecia",
-      descripcion: "Lujo mediterráneo con vistas al mar Egeo y atardeceres inolvidables.",
-      imagen: "/herosection/1.jpeg",
-      precio: "Desde €3,500"
-    },
-    {
-      nombre: "Maldivas",
-      descripcion: "Villas sobre el agua, aguas turquesas y privacidad absoluta.",
-      imagen: "/herosection/2.jpeg",
-      precio: "Desde €5,200"
-    },
-    {
-      nombre: "Aspen, Colorado",
-      descripcion: "Montañas nevadas, exclusividad y experiencias invernales premium.",
-      imagen: "/herosection/3.jpeg",
-      precio: "Desde €4,800"
-    },
-    // Puedes agregar más destinos aquí
-  ];
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const scroll = (dir: number) => {
-    if (scrollRef.current) {
-      const width = scrollRef.current.offsetWidth;
-      scrollRef.current.scrollBy({ left: dir * (width * 0.7), behavior: "smooth" });
-    }
-  };
-
-  return (
-    <div className="relative">
-      <button
-        className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white shadow-lg rounded-full p-3 border border-[#D4AF37]/40 transition-colors"
-        onClick={() => scroll(-1)}
-        aria-label="Anterior"
-        style={{ boxShadow: "0 2px 16px 0 #d4af3740" }}
-      >
-        <svg className="w-6 h-6 text-[#D4AF37]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-      </button>
-      <div
-        ref={scrollRef}
-        className="flex gap-8 overflow-x-auto no-scrollbar scroll-smooth py-4 px-1 md:px-8"
-        style={{ scrollSnapType: "x mandatory" }}
-      >
-        {destinos.map((destino, idx) => (
-          <div
-            key={idx}
-            className="min-w-[320px] md:min-w-[420px] max-w-[90vw] md:max-w-[420px] h-[420px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl bg-gray-900 relative flex-shrink-0 group cursor-pointer transition-transform duration-300 hover:scale-105"
-            style={{ scrollSnapAlign: "center" }}
-          >
-            <Image
-              src={destino.imagen}
-              alt={destino.nombre}
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 z-0"
-              draggable={false}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10" />
-            <div className="relative z-20 flex flex-col justify-end h-full p-8">
-              <h3 className="font-serif text-2xl md:text-3xl font-semibold text-white mb-2 drop-shadow">{destino.nombre}</h3>
-              <p className="text-white/90 mb-4 drop-shadow text-base md:text-lg">{destino.descripcion}</p>
-              <span className="text-[#D4AF37] font-medium mb-4">{destino.precio}</span>
-              <button className="mt-4 px-6 py-2 rounded-full bg-[#D4AF37] text-white font-semibold uppercase tracking-wide shadow-lg hover:bg-[#bfa14a] transition-colors w-max">Ver más</button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <button
-        className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white shadow-lg rounded-full p-3 border border-[#D4AF37]/40 transition-colors"
-        onClick={() => scroll(1)}
-        aria-label="Siguiente"
-        style={{ boxShadow: "0 2px 16px 0 #d4af3740" }}
-      >
-        <svg className="w-6 h-6 text-[#D4AF37]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-      </button>
-    </div>
-  );
-}
-
 export default function Home() {
   return (
     <div className="min-h-screen bg-white">
@@ -189,10 +108,42 @@ export default function Home() {
         </nav>
       </header>
 
-      {/* Hero Section */}
-      <section className="pt-24 pb-16 px-6">
-        <div className="max-w-7xl mx-auto">
-          <HeroCarouselPremium />
+      {/* Hero Section pantalla completa con carrusel de imágenes de fondo */}
+      <section className="relative w-full min-h-screen flex items-center justify-center bg-black">
+        {/* Carrusel de imágenes de fondo */}
+        {(() => {
+          const heroImages = [
+            "/herosection/1.jpeg",
+            "/herosection/2.jpeg",
+            "/herosection/3.jpeg",
+          ];
+          const [current, setCurrent] = useState(0);
+          useEffect(() => {
+            const interval = setInterval(() => {
+              setCurrent((prev) => (prev + 1) % heroImages.length);
+            }, 7000);
+            return () => clearInterval(interval);
+          }, []);
+          return (
+            <Image
+              src={heroImages[current]}
+              alt="Fondo Hero"
+              fill
+              className="object-cover object-center absolute inset-0 z-0 transition-opacity duration-1000"
+              priority
+            />
+          );
+        })()}
+        {/* Overlay oscuro */}
+        <div className="absolute inset-0 bg-black/50 z-10" />
+        {/* Contenido centrado premium */}
+        <div className="relative z-20 flex flex-col items-center justify-center text-center px-6 w-full">
+          <h1 className="font-serif text-5xl md:text-7xl font-light text-white mb-6 text-center">
+            Experiencias de <span className="text-[#D4AF37]">Lujo Únicas</span>
+          </h1>
+          <p className="text-base md:text-xl text-white/80 font-light max-w-2xl mx-auto mb-8 text-center">
+            Descubre destinos exclusivos y experiencias inolvidables diseñadas para quienes buscan lo extraordinario en cada viaje.
+          </p>
         </div>
       </section>
 
