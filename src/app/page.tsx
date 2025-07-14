@@ -10,68 +10,6 @@ const heroImages = [
   "/herosection/3.jpeg",
 ];
 
-function HeroCarouselPremium() {
-  const [current, setCurrent] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % heroImages.length);
-    }, 7000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="relative w-full h-[420px] md:h-[520px] rounded-2xl overflow-hidden shadow-xl mb-10 flex items-end justify-start">
-      {heroImages.map((img, idx) => (
-        <Image
-          key={img}
-          src={img}
-          alt="Hero"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${idx === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-          draggable={false}
-        />
-      ))}
-      {/* Overlay vertical y radial */}
-      <div className="absolute inset-0 z-20 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.25)_0%,_rgba(0,0,0,0)_70%)]" />
-      </div>
-      {/* Texto premium sin transición */}
-      <div className="relative z-30 w-full flex flex-col items-center md:items-start justify-end text-center md:text-left px-6 md:px-12 pb-12 md:pb-20 select-none">
-        <div className="max-w-2xl">
-          <h1 className="font-serif text-4xl md:text-6xl font-light text-white mb-5 leading-tight tracking-tight md:tracking-wide drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]">
-            Experiencias de
-            <span className="text-[#D4AF37] block font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]"> Lujo Únicas</span>
-          </h1>
-          <p className="text-base md:text-2xl text-white/90 leading-relaxed mb-8 drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
-            Descubre destinos exclusivos y experiencias inolvidables diseñadas para quienes buscan lo extraordinario en cada viaje.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center md:justify-start items-center md:items-start">
-            <button
-              className="group relative flex items-center gap-3 px-10 py-4 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#bfa14a] text-white uppercase tracking-wider font-semibold text-lg shadow-xl transition-all duration-300 hover:shadow-[0_0_24px_4px_rgba(212,175,55,0.4)] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2"
-            >
-              Contáctanos
-              <span className="transition-transform duration-300 group-hover:translate-x-1">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-      {/* Puntos de navegación premium */}
-      <div className="absolute bottom-7 left-1/2 -translate-x-1/2 flex gap-3 z-40">
-        {heroImages.map((_, idx) => (
-          <button
-            key={idx}
-            className={`w-4 h-4 rounded-full border-2 border-white shadow-md transition-all duration-300 ${idx === current ? 'bg-[#D4AF37] border-[#D4AF37] scale-125' : 'bg-white/40'}`}
-            onClick={() => setCurrent(idx)}
-            aria-label={`Ir a imagen ${idx + 1}`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function Home() {
   return (
     <div className="min-h-screen bg-white">
