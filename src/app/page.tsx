@@ -1,0 +1,339 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState, useRef } from "react";
+
+const heroImages = [
+  "/herosection/1.jpeg",
+  "/herosection/2.jpeg",
+  "/herosection/3.jpeg",
+];
+
+function HeroCarouselPremium() {
+  const [current, setCurrent] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % heroImages.length);
+    }, 7000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="relative w-full h-[420px] md:h-[520px] rounded-2xl overflow-hidden shadow-xl mb-10 flex items-end justify-start">
+      {heroImages.map((img, idx) => (
+        <img
+          key={img}
+          src={img}
+          alt="Hero"
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${idx === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+          draggable={false}
+        />
+      ))}
+      {/* Overlay vertical y radial */}
+      <div className="absolute inset-0 z-20 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.25)_0%,_rgba(0,0,0,0)_70%)]" />
+      </div>
+      {/* Texto premium sin transición */}
+      <div className="relative z-30 w-full flex flex-col items-center md:items-start justify-end text-center md:text-left px-6 md:px-12 pb-12 md:pb-20 select-none">
+        <div className="max-w-2xl">
+          <h1 className="font-serif text-4xl md:text-6xl font-light text-white mb-5 leading-tight tracking-tight md:tracking-wide drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]">
+            Experiencias de
+            <span className="text-[#D4AF37] block font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]"> Lujo Únicas</span>
+          </h1>
+          <p className="text-base md:text-2xl text-white/90 leading-relaxed mb-8 drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
+            Descubre destinos exclusivos y experiencias inolvidables diseñadas para quienes buscan lo extraordinario en cada viaje.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center md:justify-start items-center md:items-start">
+            <button
+              className="group relative flex items-center gap-3 px-10 py-4 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#bfa14a] text-white uppercase tracking-wider font-semibold text-lg shadow-xl transition-all duration-300 hover:shadow-[0_0_24px_4px_rgba(212,175,55,0.4)] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2"
+            >
+              Contáctanos
+              <span className="transition-transform duration-300 group-hover:translate-x-1">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+      {/* Puntos de navegación premium */}
+      <div className="absolute bottom-7 left-1/2 -translate-x-1/2 flex gap-3 z-40">
+        {heroImages.map((_, idx) => (
+          <button
+            key={idx}
+            className={`w-4 h-4 rounded-full border-2 border-white shadow-md transition-all duration-300 ${idx === current ? 'bg-[#D4AF37] border-[#D4AF37] scale-125' : 'bg-white/40'}`}
+            onClick={() => setCurrent(idx)}
+            aria-label={`Ir a imagen ${idx + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Carrusel de destinos destacado
+function DestinosCarrusel() {
+  const destinos = [
+    {
+      nombre: "Santorini, Grecia",
+      descripcion: "Lujo mediterráneo con vistas al mar Egeo y atardeceres inolvidables.",
+      imagen: "/herosection/1.jpeg",
+      precio: "Desde €3,500"
+    },
+    {
+      nombre: "Maldivas",
+      descripcion: "Villas sobre el agua, aguas turquesas y privacidad absoluta.",
+      imagen: "/herosection/2.jpeg",
+      precio: "Desde €5,200"
+    },
+    {
+      nombre: "Aspen, Colorado",
+      descripcion: "Montañas nevadas, exclusividad y experiencias invernales premium.",
+      imagen: "/herosection/3.jpeg",
+      precio: "Desde €4,800"
+    },
+    // Puedes agregar más destinos aquí
+  ];
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (dir: number) => {
+    if (scrollRef.current) {
+      const width = scrollRef.current.offsetWidth;
+      scrollRef.current.scrollBy({ left: dir * (width * 0.7), behavior: "smooth" });
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white shadow-lg rounded-full p-3 border border-[#D4AF37]/40 transition-colors"
+        onClick={() => scroll(-1)}
+        aria-label="Anterior"
+        style={{ boxShadow: "0 2px 16px 0 #d4af3740" }}
+      >
+        <svg className="w-6 h-6 text-[#D4AF37]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+      </button>
+      <div
+        ref={scrollRef}
+        className="flex gap-8 overflow-x-auto no-scrollbar scroll-smooth py-4 px-1 md:px-8"
+        style={{ scrollSnapType: "x mandatory" }}
+      >
+        {destinos.map((destino, idx) => (
+          <div
+            key={idx}
+            className="min-w-[320px] md:min-w-[420px] max-w-[90vw] md:max-w-[420px] h-[420px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl bg-gray-900 relative flex-shrink-0 group cursor-pointer transition-transform duration-300 hover:scale-105"
+            style={{ scrollSnapAlign: "center" }}
+          >
+            <img
+              src={destino.imagen}
+              alt={destino.nombre}
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 z-0"
+              draggable={false}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10" />
+            <div className="relative z-20 flex flex-col justify-end h-full p-8">
+              <h3 className="font-serif text-2xl md:text-3xl font-semibold text-white mb-2 drop-shadow">{destino.nombre}</h3>
+              <p className="text-white/90 mb-4 drop-shadow text-base md:text-lg">{destino.descripcion}</p>
+              <span className="text-[#D4AF37] font-medium mb-4">{destino.precio}</span>
+              <button className="mt-4 px-6 py-2 rounded-full bg-[#D4AF37] text-white font-semibold uppercase tracking-wide shadow-lg hover:bg-[#bfa14a] transition-colors w-max">Ver más</button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <button
+        className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/80 hover:bg-white shadow-lg rounded-full p-3 border border-[#D4AF37]/40 transition-colors"
+        onClick={() => scroll(1)}
+        aria-label="Siguiente"
+        style={{ boxShadow: "0 2px 16px 0 #d4af3740" }}
+      >
+        <svg className="w-6 h-6 text-[#D4AF37]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+      </button>
+    </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Header/Navigation */}
+      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
+        <nav className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="font-serif text-2xl font-semibold text-gray-900">
+              Endless Group
+            </div>
+            <div className="hidden md:flex items-center space-x-8">
+              <Link href="/" className="text-gray-700 hover:text-gray-900 transition-colors">
+                Inicio
+              </Link>
+              <Link href="/destinos" className="text-gray-700 hover:text-gray-900 transition-colors">
+                Destinos
+              </Link>
+              <Link href="/sobre" className="text-gray-700 hover:text-gray-900 transition-colors">
+                Sobre Nosotros
+              </Link>
+              <Link href="/contacto" className="text-gray-700 hover:text-gray-900 transition-colors">
+                Contacto
+              </Link>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button className="text-gray-700 hover:text-gray-900 transition-colors">
+                Iniciar Sesión
+              </button>
+              <button className="bg-gray-900 text-white px-6 py-2 rounded-md hover:bg-gray-800 transition-colors">
+                Registrarse
+              </button>
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      {/* Hero Section */}
+      <section className="pt-24 pb-16 px-6">
+        <div className="max-w-7xl mx-auto">
+          <HeroCarouselPremium />
+        </div>
+      </section>
+
+      {/* Experiencias de Destino - Sección lujosa */}
+      <section className="py-24 px-6 bg-gradient-to-b from-[#fffbe8] via-white to-[#f5f5f5]">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-20 flex flex-col items-center">
+            <h2 className="font-serif text-4xl md:text-6xl font-light text-gray-900 mb-3 tracking-tight text-center">
+              Experiencias que <span className="text-[#D4AF37] font-semibold">Trascienden</span> el Viaje
+            </h2>
+            <div className="w-16 h-1 bg-[#D4AF37] rounded-full mb-6"></div>
+            <p className="text-lg md:text-2xl text-gray-600 max-w-3xl text-center font-light">
+              Descubre una selección exclusiva de destinos donde el lujo se vive en cada detalle. Creamos momentos únicos para quienes buscan algo más que viajar: buscan sentir, conectar y recordar para siempre.
+            </p>
+          </div>
+          <div className="flex flex-col gap-24">
+          {/* Santorini */}
+          <div className="flex flex-col md:flex-row items-center gap-12">
+            <div className="md:w-1/2 w-full rounded-3xl overflow-hidden shadow-2xl">
+              <img src="/herosection/1.jpeg" alt="Santorini, Grecia" className="w-full h-96 object-cover" />
+            </div>
+            <div className="md:w-1/2 w-full flex flex-col items-start">
+              <h3 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">Santorini: El Encanto del Mediterráneo</h3>
+              <p className="text-xl md:text-2xl text-gray-600 mb-6 font-light">Sumérgete en la magia de Santorini, donde el azul del Egeo se funde con el blanco de sus villas. Vive atardeceres dorados, privacidad absoluta y una atmósfera diseñada para el deleite de los sentidos.</p>
+            </div>
+          </div>
+          {/* Maldivas */}
+          <div className="flex flex-col md:flex-row-reverse items-center gap-12">
+            <div className="md:w-1/2 w-full rounded-3xl overflow-hidden shadow-2xl">
+              <img src="/herosection/2.jpeg" alt="Maldivas" className="w-full h-96 object-cover" />
+            </div>
+            <div className="md:w-1/2 w-full flex flex-col items-start">
+              <h3 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">Maldivas: Paraíso Sobre el Agua</h3>
+              <p className="text-xl md:text-2xl text-gray-600 mb-6 font-light">Despierta rodeado de aguas turquesa en una villa flotante. Disfruta de experiencias exclusivas, spa frente al mar y noches estrelladas en la intimidad de un paraíso natural incomparable.</p>
+            </div>
+          </div>
+          {/* Aspen */}
+          <div className="flex flex-col md:flex-row items-center gap-12">
+            <div className="md:w-1/2 w-full rounded-3xl overflow-hidden shadow-2xl">
+              <img src="/herosection/3.jpeg" alt="Aspen, Colorado" className="w-full h-96 object-cover" />
+            </div>
+            <div className="md:w-1/2 w-full flex flex-col items-start">
+              <h3 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">Aspen: Lujo Entre Montañas</h3>
+              <p className="text-xl md:text-2xl text-gray-600 mb-6 font-light">Vive la sofisticación invernal en Aspen: cabañas exclusivas, paisajes nevados y momentos après-ski únicos. Un refugio de elegancia y confort en el corazón de las montañas.</p>
+            </div>
+          </div>
+          </div>
+          <div className="mt-20 flex flex-col items-center justify-center gap-6">
+            <span className="font-serif text-2xl md:text-3xl text-[#D4AF37] text-center">¿Listo para vivir tu próxima experiencia extraordinaria?</span>
+            <button className="px-10 py-4 rounded-full bg-[#D4AF37] text-white font-semibold uppercase tracking-wide shadow-lg hover:bg-[#bfa14a] transition-colors text-lg" onClick={() => window.location.href = '/contacto'}>
+              Contáctanos
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Galería de experiencias exclusivas moderna y elegante */}
+      <section className="py-24 px-6 bg-gradient-to-b from-white via-[#f8f6ef] to-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-14 flex flex-col items-center">
+            <h2 className="font-serif text-3xl md:text-4xl font-light text-gray-900 mb-2 tracking-tight text-center">
+              Momentos que definen el lujo
+            </h2>
+            <div className="w-12 h-1 bg-[#D4AF37] rounded-full mb-2"></div>
+            <p className="text-base md:text-lg text-gray-500 max-w-2xl text-center font-light">
+              Una selección visual de experiencias exclusivas, aventura y sofisticación en cada destino.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 grid-rows-6 md:grid-rows-3 gap-6">
+            <div className="relative row-span-2 md:row-span-3 md:col-span-1 rounded-3xl overflow-hidden shadow-2xl group">
+              <img src="/herosection/4.jpeg" alt="Jet Privado" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 group-hover:opacity-70 transition-opacity duration-500" />
+            </div>
+            <div className="relative md:col-span-2 md:row-span-2 rounded-3xl overflow-hidden shadow-2xl group">
+              <img src="/herosection/5.jpeg" alt="Experiencia Selva" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-50 group-hover:opacity-60 transition-opacity duration-500" />
+            </div>
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl group">
+              <img src="/herosection/6.jpeg" alt="Aventura Desierto" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-40 group-hover:opacity-50 transition-opacity duration-500" />
+            </div>
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl group">
+              <img src="/herosection/7.jpeg" alt="Villa sobre el agua" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-40 group-hover:opacity-50 transition-opacity duration-500" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="font-serif text-xl font-medium mb-4">Endless Group</h3>
+              <p className="text-gray-400 leading-relaxed">
+                Experiencias de lujo únicas para quienes buscan lo extraordinario en cada viaje.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-medium mb-4">Servicios</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li><Link href="#" className="hover:text-white transition-colors">Travel</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">Lifestyle</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">Business</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">Capital</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium mb-4">Compañía</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li><Link href="/sobre" className="hover:text-white transition-colors">Sobre Nosotros</Link></li>
+                <li><Link href="/contacto" className="hover:text-white transition-colors">Contacto</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">Privacidad</Link></li>
+                <li><Link href="#" className="hover:text-white transition-colors">Términos</Link></li>
+              </ul>
+            </div>
+            {/* Sección de contacto premium alineada y elegante */}
+            <div className="flex flex-col gap-4 items-start justify-center text-left w-full">
+              <div className="flex items-center gap-3 w-full">
+                <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                <span className="text-stone-300 text-sm">valenka@the8lifestyle.com</span>
+              </div>
+              <div className="flex items-center gap-3 w-full">
+                <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10a9 9 0 0118 0c0 4.418-3.582 8-8 8s-8-3.582-8-8z" /><circle cx="12" cy="10" r="3" /></svg>
+                <span className="text-stone-300 text-sm">Portugal / España / USA / Venezuela</span>
+              </div>
+              <div className="flex flex-col items-start gap-1 w-full">
+                <div className="flex items-center gap-3 w-full">
+                  <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A2 2 0 007.48 19h9.04a2 2 0 001.83-1.3L17 13M7 13l1.5-6h7l1.5 6" /></svg>
+                  <span className="text-stone-300 text-sm">+351 925 720 989</span>
+                </div>
+                <span className="font-serif text-base md:text-lg text-[#D4AF37] text-right italic tracking-wide mt-1 w-full">Nada se improvisa. Todo se siente.</span>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2025 Endless Group. Todos los derechos reservados.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
