@@ -79,7 +79,7 @@ export default function Home() {
 
       {/* Hero Section pantalla completa con carrusel de videos de fondo */}
       <section className="relative w-full min-h-screen flex items-center justify-center bg-black">
-        {/* Crossfade de videos solo durante la transición */}
+        {/* Videos de fondo */}
         {prev !== null && prev !== current && heroVideos[prev] !== heroVideos[current] && (
           <video
             key={`prev-${prev}-${heroVideos[prev]}`}
@@ -99,15 +99,13 @@ export default function Home() {
           loop
           muted
           playsInline
-          className="object-cover object-center absolute inset-0 w-full h-full z-0 opacity-100 transition-opacity duration-2000"
-          style={{transitionProperty: 'opacity'}}
+          className="object-cover object-center absolute inset-0 w-full h-full z-0 opacity-100"
         />
-        {/* Overlay de degradado radial premium */}
+        {/* Overlay premium SIEMPRE visible y fijo */}
         <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.25)_0%,_rgba(0,0,0,0.55)_100%)]" />
-        {/* Overlay oscuro */}
-        <div className="absolute inset-0 bg-black/50 z-10" />
+        <div className="absolute inset-0 bg-black/50 z-20" />
         {/* Contenido centrado premium */}
-        <div className="relative z-20 flex flex-col items-center justify-center text-center px-6 w-full">
+        <div className="relative z-30 flex flex-col items-center justify-center text-center px-6 w-full">
           <h1 className="font-serif text-5xl md:text-7xl font-light text-white mb-6 text-center">
             Experiencias de <span className="text-[#D4AF37]">Lujo Únicas</span>
           </h1>
