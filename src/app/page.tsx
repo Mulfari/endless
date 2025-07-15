@@ -27,17 +27,11 @@ export default function Home() {
       setPrev(current);
       setFade(true);
       timeout = setTimeout(() => {
-        setCurrent((prevIdx) => {
-          let nextIdx;
-          do {
-            nextIdx = Math.floor(Math.random() * heroVideos.length);
-          } while (nextIdx === prevIdx); // Asegura que no se repita el mismo video
-          return nextIdx;
-        });
+        setCurrent((prevIdx) => (prevIdx + 1) % heroVideos.length); // Avanza secuencialmente
         setFade(false);
         setPrev(null);
-      }, 2500); // 4s total - 2s de fade = 2s de video visible antes del fade
-    }, 2500); // Cambiado a 4 segundos
+      }, 2000);
+    }, 2500); // 4s total - 2s de fade = 2s de video visible antes del fade
     return () => {
       clearInterval(interval);
       if (timeout) clearTimeout(timeout);
