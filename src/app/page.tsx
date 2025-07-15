@@ -10,14 +10,7 @@ export default function Home() {
     "/herosection/2v.mp4",
     "/herosection/3v.mp4",
   ];
-  const [current, setCurrent] = useState(0); // Siempre 0 para SSR
-
-  useEffect(() => {
-    // Solo en cliente, cambia a un índice aleatorio al montar
-    const randomIdx = Math.floor(Math.random() * heroVideos.length);
-    setCurrent(randomIdx);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Solo una vez al montar
+  const [current] = useState(() => Math.floor(Math.random() * heroVideos.length));
   const [isAtTop, setIsAtTop] = useState(true);
   useEffect(() => {
     const handleScroll = () => {
