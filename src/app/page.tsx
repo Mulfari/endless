@@ -18,25 +18,6 @@ export default function Home() {
     setCurrent(randomIdx);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Solo una vez al montar
-  const [fade, setFade] = useState(false);
-  const [prev, setPrev] = useState<number | null>(null);
-
-  useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    const interval = setInterval(() => {
-      setPrev(current);
-      setFade(true);
-      timeout = setTimeout(() => {
-        setCurrent((prevIdx) => (prevIdx + 1) % heroVideos.length); // Avanza secuencialmente
-        setFade(false);
-        setPrev(null);
-      }, 2000);
-    }, 2500); // 4s total - 2s de fade = 2s de video visible antes del fade
-    return () => {
-      clearInterval(interval);
-      if (timeout) clearTimeout(timeout);
-    };
-  }, [current, heroVideos.length]);
   const [isAtTop, setIsAtTop] = useState(true);
   useEffect(() => {
     const handleScroll = () => {
@@ -73,19 +54,7 @@ export default function Home() {
 
       {/* Hero Section pantalla completa con carrusel de videos de fondo */}
       <section className="relative w-full min-h-screen flex items-center justify-center bg-black">
-        {/* Videos de fondo */}
-        {prev !== null && prev !== current && heroVideos[prev] !== heroVideos[current] && (
-          <video
-            key={`prev-${prev}-${heroVideos[prev]}`}
-            src={heroVideos[prev]}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className={`object-cover object-center absolute inset-0 w-full h-full z-0 transition-opacity duration-2000 ${fade ? 'opacity-0' : 'opacity-100'}`}
-            style={{transitionProperty: 'opacity'}}
-          />
-        )}
+        {/* Video de fondo sin crossfade */}
         <video
           key={`current-${current}-${heroVideos[current]}`}
           src={heroVideos[current]}
