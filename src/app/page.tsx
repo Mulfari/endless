@@ -96,8 +96,7 @@ export default function Home() {
           className="object-cover object-center absolute inset-0 w-full h-full z-0 opacity-100"
         />
         {/* Overlay premium SIEMPRE visible y fijo */}
-        <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.25)_0%,_rgba(0,0,0,0.55)_100%)]" />
-        <div className="absolute inset-0 bg-black/50 z-20" />
+        <div className="absolute inset-0 bg-black/80 z-20 pointer-events-none" />
         {/* Contenido centrado premium */}
         <div className="relative z-30 flex flex-col items-center justify-center text-center px-6 w-full">
           <h1 className="font-serif text-5xl md:text-7xl font-light text-white mb-6 text-center">
