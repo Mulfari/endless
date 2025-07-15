@@ -5,63 +5,105 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 export default function Home() {
-  const heroImages = [
-    "/herosection/1.jpeg",
-    "/herosection/2.jpeg",
-    "/herosection/3.jpeg",
+  const heroVideos = [
+    "/herosection/1v.mp4",
+    "/herosection/2v.mp4",
+    "/herosection/3v.mp4",
   ];
-  const [current, setCurrent] = useState(0);
+  const [current, setCurrent] = useState(0); // Siempre 0 para SSR
+
   useEffect(() => {
+    // Solo en cliente, cambia a un índice aleatorio al montar
+    const randomIdx = Math.floor(Math.random() * heroVideos.length);
+    setCurrent(randomIdx);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Solo una vez al montar
+  const [fade, setFade] = useState(false);
+  const [prev, setPrev] = useState<number | null>(null);
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
     const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % heroImages.length);
-    }, 7000);
-    return () => clearInterval(interval);
-  }, [heroImages.length]);
+      setPrev(current);
+      setFade(true);
+      timeout = setTimeout(() => {
+        setCurrent((prevIdx) => {
+          let nextIdx;
+          do {
+            nextIdx = Math.floor(Math.random() * heroVideos.length);
+          } while (nextIdx === prevIdx); // Asegura que no se repita el mismo video
+          return nextIdx;
+        });
+        setFade(false);
+        setPrev(null);
+      }, 2500); // 4s total - 2s de fade = 2s de video visible antes del fade
+    }, 2500); // Cambiado a 4 segundos
+    return () => {
+      clearInterval(interval);
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [current, heroVideos.length]);
+  const [isAtTop, setIsAtTop] = useState(true);
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsAtTop(window.scrollY < 40);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   return (
     <div className="min-h-screen bg-white">
       {/* Header/Navigation */}
-      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
+      <header className={`fixed top-0 w-full transition-colors duration-300 z-50 ${isAtTop ? 'bg-transparent border-b border-white/30' : 'bg-white/95 border-b border-gray-100 backdrop-blur-sm'}`}>
         <nav className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="font-serif text-2xl font-semibold text-gray-900">
-              Endless Group
-            </div>
+            <div className={`font-serif text-2xl font-semibold transition-colors duration-300 ${isAtTop ? 'text-white' : 'text-gray-900'}`}>Endless Group</div>
             <div className="hidden md:flex items-center space-x-8">
-              <Link href="/" className="text-gray-700 hover:text-gray-900 transition-colors">
-                Inicio
-              </Link>
-              <Link href="/destinos" className="text-gray-700 hover:text-gray-900 transition-colors">
-                Destinos
-              </Link>
-              <Link href="/sobre" className="text-gray-700 hover:text-gray-900 transition-colors">
-                Sobre Nosotros
-              </Link>
-              <Link href="/contacto" className="text-gray-700 hover:text-gray-900 transition-colors">
-                Contacto
-              </Link>
+              <Link href="/" className={`transition-colors duration-300 ${isAtTop ? 'text-white hover:text-[#D4AF37]' : 'text-gray-700 hover:text-gray-900'}`}>Inicio</Link>
+              <Link href="/destinos" className={`transition-colors duration-300 ${isAtTop ? 'text-white hover:text-[#D4AF37]' : 'text-gray-700 hover:text-gray-900'}`}>Destinos</Link>
+              <Link href="/sobre" className={`transition-colors duration-300 ${isAtTop ? 'text-white hover:text-[#D4AF37]' : 'text-gray-700 hover:text-gray-900'}`}>Sobre Nosotros</Link>
+              <Link href="/contacto" className={`transition-colors duration-300 ${isAtTop ? 'text-white hover:text-[#D4AF37]' : 'text-gray-700 hover:text-gray-900'}`}>Contacto</Link>
             </div>
-            <div className="flex items-center space-x-4">
-              <button className="text-gray-700 hover:text-gray-900 transition-colors">
-                Iniciar Sesión
-              </button>
-              <button className="bg-gray-900 text-white px-6 py-2 rounded-md hover:bg-gray-800 transition-colors">
-                Registrarse
+            <div className="flex items-center">
+              <button className={`transition-colors duration-300 p-2 rounded-full ${isAtTop ? 'text-white hover:text-[#D4AF37]' : 'text-gray-700 hover:text-[#D4AF37]'}`}
+                aria-label="Login / Usuario">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-7 h-7">
+                  <circle cx="12" cy="9" r="3.5" stroke="currentColor" strokeWidth="2" />
+                  <path d="M6 18c0-2.5 3-4 6-4s6 1.5 6 4" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
+                </svg>
               </button>
             </div>
           </div>
         </nav>
       </header>
 
-      {/* Hero Section pantalla completa con carrusel de imágenes de fondo */}
+      {/* Hero Section pantalla completa con carrusel de videos de fondo */}
       <section className="relative w-full min-h-screen flex items-center justify-center bg-black">
-        {/* Carrusel de imágenes de fondo */}
-        <Image
-          src={heroImages[current]}
-          alt="Fondo Hero"
-          fill
-          className="object-cover object-center absolute inset-0 z-0 transition-opacity duration-1000"
-          priority
+        {/* Crossfade de videos solo durante la transición */}
+        {prev !== null && prev !== current && heroVideos[prev] !== heroVideos[current] && (
+          <video
+            key={`prev-${prev}-${heroVideos[prev]}`}
+            src={heroVideos[prev]}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className={`object-cover object-center absolute inset-0 w-full h-full z-0 transition-opacity duration-2000 ${fade ? 'opacity-0' : 'opacity-100'}`}
+            style={{transitionProperty: 'opacity'}}
+          />
+        )}
+        <video
+          key={`current-${current}-${heroVideos[current]}`}
+          src={heroVideos[current]}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className={`object-cover object-center absolute inset-0 w-full h-full z-0 transition-opacity duration-2000 ${fade ? 'opacity-100' : 'opacity-100'}`}
+          style={{transitionProperty: 'opacity'}}
         />
+        {/* Overlay de degradado radial premium */}
+        <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.25)_0%,_rgba(0,0,0,0.55)_100%)]" />
         {/* Overlay oscuro */}
         <div className="absolute inset-0 bg-black/50 z-10" />
         {/* Contenido centrado premium */}
