@@ -99,7 +99,7 @@ export default function Home() {
           loop
           muted
           playsInline
-          className={`object-cover object-center absolute inset-0 w-full h-full z-0 transition-opacity duration-2000 ${fade ? 'opacity-100' : 'opacity-100'}`}
+          className="object-cover object-center absolute inset-0 w-full h-full z-0 opacity-100 transition-opacity duration-2000"
           style={{transitionProperty: 'opacity'}}
         />
         {/* Overlay de degradado radial premium */}
@@ -116,6 +116,13 @@ export default function Home() {
           </p>
         </div>
       </section>
+      {/* Indicador de desplazamiento */}
+      <div className="flex flex-col items-center justify-center mt-[-2.5rem] mb-12 z-30 relative">
+        <span className="text-white/80 font-serif text-lg md:text-xl mb-2 drop-shadow-lg animate-fade-in">Desplaza hacia abajo para ver más</span>
+        <svg className="w-7 h-7 text-[#D4AF37] animate-bounce" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
 
       {/* Experiencias de Destino - Sección lujosa */}
       <section className="py-24 px-6 bg-gradient-to-b from-[#fffbe8] via-white to-[#f5f5f5]">
