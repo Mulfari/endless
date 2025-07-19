@@ -47,7 +47,7 @@ export default function HeroSection() {
           <video
             key={idx}
             // Guardamos ref aunque sea null
-            ref={(el) => (videoRefs.current[idx] = el)}
+            ref={el => { videoRefs.current[idx] = el; }}
             src={src}
             muted
             playsInline
