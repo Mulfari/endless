@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import HeroSection from "../components/HeroSection";
 import ExperienciasSection from "../components/ExperienciasSection";
 import GaleriaSection from "../components/GaleriaSection";
