@@ -141,10 +141,10 @@ export default function ServiciosSection() {
       </div>
 
       {/* Content principal */}
-      <div className="relative z-10 min-h-screen flex">
+      <div className="relative z-10 min-h-screen flex flex-col lg:flex-row">
         
         {/* Left column - Service information */}
-        <div className="w-full lg:w-1/2 flex flex-col justify-center p-8 md:p-16 lg:p-24 min-h-[700px]">
+        <div className="w-full lg:w-1/2 flex flex-col justify-center p-6 md:p-12 lg:p-24 min-h-[500px] lg:min-h-[700px]">
           
           {/* Header */}
           <div className="mb-12">
@@ -221,12 +221,12 @@ export default function ServiciosSection() {
         </div>
 
         {/* Right column - Atención Personalizada */}
-        <div className="hidden lg:flex w-1/2 flex-col justify-center p-8 min-h-[700px]">
+        <div className="w-full lg:w-1/2 flex flex-col justify-center p-6 md:p-8 min-h-[400px] lg:min-h-[700px]">
           
           {/* Imagen elegante centrada */}
           <div className="flex justify-center items-center h-full">
-            <div className="relative max-w-xl w-full">
-              <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-2xl shadow-black/50">
+            <div className="relative w-full max-w-sm lg:max-w-xl">
+              <div className="relative h-[300px] lg:h-[500px] rounded-2xl overflow-hidden shadow-2xl shadow-black/50">
                 <img 
                   src="/herosection/1.jpeg" 
                   alt="Endless Experience" 
@@ -242,15 +242,15 @@ export default function ServiciosSection() {
         </div>
       </div>
 
-      {/* Mobile navigation */}
-      <div className="lg:hidden fixed bottom-24 left-8 right-8 z-50">
-        <div className="bg-black/80 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-          <div className="grid grid-cols-5 gap-2 mb-4">
+      {/* Mobile navigation - Optimized */}
+      <div className="lg:hidden fixed bottom-4 left-4 right-4 z-50">
+        <div className="bg-black/90 backdrop-blur-xl rounded-xl p-4 border border-white/10 shadow-2xl">
+          <div className="grid grid-cols-5 gap-1 mb-2">
             {services.map((service, index) => (
               <button
                 key={service.id}
                 onClick={() => setCurrentService(index)}
-                className={`py-2 px-3 rounded-lg transition-all duration-300 text-center ${
+                className={`py-1.5 px-2 rounded-md transition-all duration-300 text-center ${
                   index === currentService 
                     ? 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30' 
                     : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white/80'
@@ -263,7 +263,7 @@ export default function ServiciosSection() {
             ))}
           </div>
           <div className="text-center text-white/50 text-xs font-light">
-            Servicios Exclusivos
+            Servicios
           </div>
         </div>
       </div>

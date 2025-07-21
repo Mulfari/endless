@@ -16,43 +16,43 @@ export default function Footer() {
     <footer className="bg-black text-white">
       
       {/* Main footer content */}
-      <div className="max-w-6xl mx-auto px-8 py-16">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-16">
         
-        {/* Three column layout with spacing */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Two column layout for mobile, three for desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8">
           
           {/* Left column - Brand */}
-          <div className="lg:col-span-4">
-            <h2 className="text-3xl font-bold text-white mb-6">
+          <div className="md:col-span-1 lg:col-span-5">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 md:mb-6">
               <span className="text-[#D4AF37]">Endless</span> Travels
             </h2>
-            <p className="text-white/70 mb-8 leading-relaxed">
+            <p className="text-white/70 mb-6 md:mb-8 leading-relaxed text-sm md:text-base">
               Redefiniendo el lujo a través de la innovación, exclusividad y atención personalizada incomparable.
             </p>
             
-            <div className="text-[#D4AF37] italic">
+            <div className="text-[#D4AF37] italic text-sm md:text-base">
               &ldquo;Nada se improvisa. Todo se siente.&rdquo;
             </div>
           </div>
           
-          {/* Middle column - Empty space */}
-          <div className="lg:col-span-4">
+          {/* Middle column - Empty space (only on large screens) */}
+          <div className="hidden lg:block lg:col-span-2">
           </div>
           
           {/* Right column - Contact & Newsletter */}
-          <div className="lg:col-span-4">
+          <div className="md:col-span-1 lg:col-span-5">
             
             {/* Contact */}
-            <div className="mb-10">
-              <h3 className="text-white font-semibold mb-4">Contacto</h3>
+            <div className="mb-8 md:mb-10">
+              <h3 className="text-white font-semibold mb-3 md:mb-4 text-lg">Contacto</h3>
               <div className="space-y-2">
-                <Link href="mailto:valenka@the8lifestyle.com" className="block text-white/70 hover:text-[#D4AF37] transition-colors duration-200">
+                <Link href="mailto:valenka@the8lifestyle.com" className="block text-white/70 hover:text-[#D4AF37] transition-colors duration-200 text-sm md:text-base">
                   valenka@the8lifestyle.com
                 </Link>
-                <Link href="tel:+351925720989" className="block text-white/70 hover:text-[#D4AF37] transition-colors duration-200">
+                <Link href="tel:+351925720989" className="block text-white/70 hover:text-[#D4AF37] transition-colors duration-200 text-sm md:text-base">
                   +351 925 720 989
                 </Link>
-                <div className="text-white/60 text-sm mt-3">
+                <div className="text-white/60 text-xs md:text-sm mt-3">
                   Portugal / España / USA / Venezuela
                 </div>
               </div>
@@ -60,11 +60,11 @@ export default function Footer() {
             
             {/* Newsletter */}
             <div>
-              <h3 className="text-white font-semibold mb-4">Newsletter</h3>
-              <p className="text-white/70 mb-4 text-sm">
+              <h3 className="text-white font-semibold mb-3 md:mb-4 text-lg">Newsletter</h3>
+              <p className="text-white/70 mb-4 text-xs md:text-sm">
                 Recibe acceso exclusivo a nuevas experiencias.
               </p>
-              <form onSubmit={handleSubscribe} className="flex gap-2">
+              <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="email"
                   required

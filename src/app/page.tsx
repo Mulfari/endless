@@ -36,7 +36,7 @@ export default function Home() {
           ? 'bg-black/20 backdrop-blur-xl border-b border-white/20 shadow-lg shadow-black/10' 
           : 'bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-xl shadow-black/5'
       }`}>
-        <nav className="max-w-7xl mx-auto px-6 py-5">
+        <nav className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-5">
           <div className={`flex items-center justify-between transition-all duration-700 ${
             isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
           }`}>
