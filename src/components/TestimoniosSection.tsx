@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface Testimonio {
   id: number;
@@ -159,7 +159,7 @@ export default function TestimoniosSection() {
 
                   {/* Texto */}
                   <blockquote className="text-white text-xl font-light leading-relaxed mb-6 italic">
-                    "{testimonios[0].texto}"
+                    &ldquo;{testimonios[0].texto}&rdquo;
                   </blockquote>
 
                   {/* Cliente info */}
@@ -222,7 +222,7 @@ export default function TestimoniosSection() {
 
                   {/* Texto */}
                   <blockquote className="text-gray-800 text-base font-light leading-relaxed mb-4 flex-1 italic">
-                    "{testimonio.texto}"
+                    &ldquo;{testimonio.texto}&rdquo;
                   </blockquote>
 
                   {/* Cliente info */}

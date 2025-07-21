@@ -31,7 +31,7 @@ export default function Footer() {
             </p>
             
             <div className="text-[#D4AF37] italic">
-              "Nada se improvisa. Todo se siente."
+              &ldquo;Nada se improvisa. Todo se siente.&rdquo;
             </div>
           </div>
           

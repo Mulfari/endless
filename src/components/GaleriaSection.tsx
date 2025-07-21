@@ -94,7 +94,6 @@ export default function ServiciosSection() {
   useEffect(() => {
     const handleScroll = () => {
       if (sectionRef.current) {
-        const rect = sectionRef.current.getBoundingClientRect();
         const scrolled = window.pageYOffset;
         const rate = scrolled * -0.3;
         setScrollY(rate);
