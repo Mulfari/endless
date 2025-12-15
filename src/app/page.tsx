@@ -55,10 +55,10 @@ export default function Home() {
 
     const prevOverflow = document.body.style.overflow;
     const prevHtmlOverflow = document.documentElement.style.overflow;
-    const prevOverscroll = (document.documentElement.style as any).overscrollBehaviorY;
+    const prevOverscroll = document.documentElement.style.getPropertyValue("overscroll-behavior-y");
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
-    (document.documentElement.style as any).overscrollBehaviorY = "none";
+    document.documentElement.style.setProperty("overscroll-behavior-y", "none");
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMobileMenuOpen(false);
@@ -74,7 +74,11 @@ export default function Home() {
     return () => {
       document.body.style.overflow = prevOverflow;
       document.documentElement.style.overflow = prevHtmlOverflow;
-      (document.documentElement.style as any).overscrollBehaviorY = prevOverscroll;
+      if (prevOverscroll) {
+        document.documentElement.style.setProperty("overscroll-behavior-y", prevOverscroll);
+      } else {
+        document.documentElement.style.removeProperty("overscroll-behavior-y");
+      }
       window.removeEventListener("keydown", onKeyDown);
       if (lockForGate) window.removeEventListener("touchmove", onTouchMove);
     };
