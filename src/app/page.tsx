@@ -25,6 +25,58 @@ export default function Home() {
   const [scrollProgress, setScrollProgress] = useState(0);
   // const pathname = usePathname();
 
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileScrollUnlocked, setMobileScrollUnlocked] = useState(true);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1023px)");
+    const update = () => setIsMobile(mql.matches);
+    update();
+    mql.addEventListener("change", update);
+    return () => mql.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    // En móvil: bloquear scroll hasta que el usuario toque "Explore World"
+    // (no afecta desktop). El menú hamburguesa sigue funcionando igual.
+    if (!isMobile) {
+      setMobileScrollUnlocked(true);
+      return;
+    }
+    setMobileScrollUnlocked(false);
+  }, [isMobile]);
+
+  useEffect(() => {
+    // UX móvil: bloquear scroll del body y permitir cerrar con ESC cuando el menú está abierto
+    const lockForHero = isMobile && !mobileScrollUnlocked && !mobileMenuOpen;
+    const shouldLock = mobileMenuOpen || lockForHero;
+    if (!shouldLock) return;
+
+    const prevOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+
+    const onTouchMove = (e: TouchEvent) => {
+      // Solo bloqueamos el gesto de scroll cuando estamos en "lock" del Hero.
+      // Si el menú está abierto, permitimos interacción normal dentro del drawer.
+      if (lockForHero) e.preventDefault();
+    };
+    if (lockForHero) window.addEventListener("touchmove", onTouchMove, { passive: false });
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+      if (lockForHero) window.removeEventListener("touchmove", onTouchMove);
+    };
+  }, [mobileMenuOpen, isMobile, mobileScrollUnlocked]);
+
   useEffect(() => {
     const INTRO_KEY = "endless:introSeen:v1";
 
@@ -346,6 +398,8 @@ export default function Home() {
                   : isAtTop ? 'text-white hover:text-[#D4AF37]' : 'text-black hover:text-[#D4AF37]'
                   }`}
                 aria-label="Menú"
+                aria-expanded={mobileMenuOpen}
+                aria-controls="mobile-menu"
               >
                 <div className="w-6 h-6 flex flex-col justify-center items-end gap-1.5">
                   <span className={`block h-[2px] bg-current transition-all duration-500 ease-out ${mobileMenuOpen ? 'w-6 rotate-45 translate-y-2' : 'w-6'}`} />
@@ -357,92 +411,6 @@ export default function Home() {
           </div>
         </nav>
 
-        {/* Mobile Navigation Drawer - Minimalist Slide-in */}
-        <div className={`lg:hidden fixed inset-0 z-[100] transition-all duration-500 ${mobileMenuOpen ? 'visible' : 'invisible delay-300'
-          }`}>
-
-          {/* Backdrop */}
-          <div
-            className={`absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity duration-500 ${mobileMenuOpen ? 'opacity-100' : 'opacity-0'
-              }`}
-            onClick={() => setMobileMenuOpen(false)}
-          />
-
-          {/* Drawer Panel */}
-          <div className={`absolute top-0 right-0 h-full w-[280px] bg-white shadow-2xl transform transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
-            }`}>
-
-            <div className="flex flex-col h-full p-8 pt-24">
-
-              {/* Mobile Nav Links */}
-              <div className="flex flex-col gap-6">
-                {[
-                  { name: 'Servicios', href: '#servicios', scroll: true, id: 'servicios' },
-                  { name: 'Testimonios', href: '#testimonios', scroll: true, id: 'testimonios' },
-                  { name: 'Nuestra Visión', href: '/nuestra-vision', scroll: false, id: '' }
-                ].map((item, idx) => {
-                  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-                    if (item.scroll) {
-                      e.preventDefault();
-                      const element = document.querySelector(item.href);
-                      if (element) {
-                        const headerOffset = 80;
-                        const elementPosition = element.getBoundingClientRect().top;
-                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                        window.scrollTo({
-                          top: offsetPosition,
-                          behavior: 'smooth'
-                        });
-                      }
-                    }
-                    setMobileMenuOpen(false);
-                  };
-
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      onClick={handleClick}
-                      className={`relative text-lg uppercase tracking-widest font-medium transition-all duration-500 transform flex items-center gap-3 text-gray-900 hover:text-[#D4AF37] ${
-                        mobileMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'
-                      }`}
-                      style={{ transitionDelay: `${100 + idx * 100}ms` }}
-                    >
-                      <span>{item.name}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-
-              {/* Spacer */}
-              <div className="flex-1" />
-
-              {/* Mobile Actions */}
-              <div className={`flex flex-col gap-5 transition-all duration-700 delay-300 ${mobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-                }`}>
-                <Link
-                  href="/contacto"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full py-3 rounded-sm border border-[#D4AF37] text-[#D4AF37] text-center text-xs font-bold uppercase tracking-widest hover:bg-[#D4AF37] hover:text-white transition-all duration-300"
-                >
-                  Contáctanos
-                </Link>
-
-                <button
-                  className="flex items-center justify-start gap-3 text-gray-500 hover:text-[#D4AF37] transition-colors duration-300 py-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.2" stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span className="text-xs font-medium uppercase tracking-widest">Iniciar Sesión</span>
-                </button>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
         {/* Barra de progreso sutil para scroll */}
         <div 
           className={`absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-yellow-400 to-[#D4AF37] transition-all duration-300 ${
@@ -451,6 +419,121 @@ export default function Home() {
           style={{ width: `${scrollProgress}%` }}
         />
       </header>
+
+      {/* Mobile Navigation Drawer (fuera del header para evitar bugs por transform/stacking) */}
+      <div
+        id="mobile-menu"
+        className={`lg:hidden fixed inset-0 z-[220] transition-opacity duration-300 ${
+          mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+        }`}
+        aria-hidden={!mobileMenuOpen}
+      >
+        {/* Backdrop */}
+        <div
+          className="absolute inset-0 bg-black/40 backdrop-blur-md"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+
+        {/* Drawer Panel */}
+        <div
+          className={`absolute top-0 right-0 h-full w-[82vw] max-w-[360px] bg-white/95 backdrop-blur-xl border-l border-black/10 shadow-2xl transform transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+            mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          <div className="flex flex-col h-full px-6 pt-6 pb-8">
+            {/* Drawer header */}
+            <div className="flex items-center justify-between">
+              <div className="select-none">
+                <div className="text-xl font-extrabold tracking-[-0.02em] text-black">
+                  ENDLESS<span className="text-[#D4AF37]">.</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Cerrar menú"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 hover:bg-black/10 text-gray-800 transition-colors duration-200"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-black/10 to-transparent" />
+
+            {/* Mobile Nav Links */}
+            <div className="mt-6 flex flex-col">
+              {[
+                { name: 'Servicios', href: '#servicios', scroll: true },
+                { name: 'Testimonios', href: '#testimonios', scroll: true },
+                { name: 'Nuestra Visión', href: '/nuestra-vision', scroll: false }
+              ].map((item, idx) => {
+                const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+                  if (item.scroll) {
+                    e.preventDefault();
+                    const element = document.querySelector(item.href);
+                    if (element) {
+                      const headerOffset = 80;
+                      const elementPosition = element.getBoundingClientRect().top;
+                      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+                    }
+                  }
+                  setMobileMenuOpen(false);
+                };
+
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={handleClick}
+                    className={`py-4 text-sm uppercase tracking-[0.24em] font-semibold text-gray-900 transition-all duration-500 transform border-b border-black/5 ${
+                      mobileMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-6 opacity-0'
+                    } hover:text-black`}
+                    style={{ transitionDelay: `${60 + idx * 80}ms` }}
+                  >
+                    <span className="inline-flex items-center justify-between w-full">
+                      <span>{item.name}</span>
+                      <span className="text-gray-300">—</span>
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Mobile Actions */}
+            <div
+              className={`mt-6 flex flex-col gap-3 transition-all duration-500 delay-200 ${
+                mobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
+              }`}
+            >
+              <Link
+                href="/contacto"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full py-3.5 rounded-full bg-[#D4AF37] text-black text-center text-xs font-bold uppercase tracking-[0.22em] transition-colors duration-200 hover:bg-[#CDA233]"
+              >
+                Contáctanos
+              </Link>
+
+              <button
+                type="button"
+                className="flex items-center justify-center gap-3 text-gray-700 hover:text-black transition-colors duration-200 py-3 rounded-full border border-black/10 bg-black/[0.02] hover:bg-black/[0.04]"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.2" stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="text-xs font-medium uppercase tracking-widest">Iniciar Sesión</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Intro Animation Overlay */}
       <div className={`intro-overlay fixed inset-0 z-[200] bg-black flex items-center justify-center transition-opacity duration-1000 ease-in-out pointer-events-none ${isLoaded ? 'opacity-0' : 'opacity-100'
@@ -465,7 +548,18 @@ export default function Home() {
 
       <main className="relative">
         <div ref={heroRef} id="hero" className="scroll-mt-24">
-          <HeroSection />
+          <HeroSection
+            onExplore={() => {
+              setMobileScrollUnlocked(true);
+              const el = document.querySelector("#servicios");
+              if (el) {
+                const headerOffset = 80;
+                const rectTop = (el as HTMLElement).getBoundingClientRect().top;
+                const top = rectTop + window.scrollY - headerOffset;
+                window.scrollTo({ top, behavior: "smooth" });
+              }
+            }}
+          />
         </div>
         <div id="servicios">
           <div ref={serviciosRef} className="scroll-mt-24">

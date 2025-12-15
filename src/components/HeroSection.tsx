@@ -9,7 +9,11 @@ const heroVideos = [
   "/herosection/3v.mp4",
 ];
 
-export default function HeroSection() {
+type HeroSectionProps = {
+  onExplore?: () => void;
+};
+
+export default function HeroSection({ onExplore }: HeroSectionProps) {
   const [current, setCurrent] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   // Arreglo de refs que puede contener null inicialmente
@@ -117,7 +121,25 @@ export default function HeroSection() {
         {/* CTA Minimalista - Glass Button */}
         <div className="animate-fade-in-delay-3">
           <Link
-            href="/servicios"
+            href="#servicios"
+            onClick={(e) => {
+              // En móvil, el Home bloquea scroll hasta tocar este CTA
+              if (onExplore) {
+                e.preventDefault();
+                onExplore();
+                return;
+              }
+
+              // Fallback: scroll suave a Servicios
+              e.preventDefault();
+              const el = document.querySelector("#servicios");
+              if (el) {
+                const headerOffset = 80;
+                const rectTop = (el as HTMLElement).getBoundingClientRect().top;
+                const top = rectTop + window.scrollY - headerOffset;
+                window.scrollTo({ top, behavior: "smooth" });
+              }
+            }}
             className="group relative inline-flex items-center justify-center px-12 py-4 overflow-hidden transition-all duration-500 ease-out"
           >
             {/* Border Gradient */}

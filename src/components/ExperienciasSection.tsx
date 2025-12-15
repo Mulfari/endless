@@ -132,10 +132,10 @@ export default function ExperienciasSection() {
       <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-black/70 via-black/30 to-transparent pointer-events-none z-10 animate-fade-in-slow"></div>
 
       {/* Línea decorativa dorada vertical */}
-      <div className="absolute right-8 top-[30%] bottom-[30%] w-[1px] bg-gradient-to-b from-transparent via-[#D4AF37]/30 to-transparent z-20 animate-fade-in-delay"></div>
+      <div className="hidden lg:block absolute right-8 top-[30%] bottom-[30%] w-[1px] bg-gradient-to-b from-transparent via-[#D4AF37]/30 to-transparent z-20 animate-fade-in-delay"></div>
 
       {/* Lista de Destinos - Con animaciones mejoradas */}
-      <div className="absolute right-16 top-[50%] transform -translate-y-1/2 z-30">
+      <div className="hidden lg:block absolute right-16 top-[50%] transform -translate-y-1/2 z-30">
         <div className="space-y-5">
           {/* Encabezado del menú */}
           <div className="text-right animate-slide-in-right" style={{ animationDelay: `0ms` }}>
@@ -149,6 +149,7 @@ export default function ExperienciasSection() {
             <div
               key={idx}
               onMouseEnter={() => !isTransitioning && setActiveIndex(idx)}
+              onClick={() => !isTransitioning && setActiveIndex(idx)}
               className={`text-right transition-all duration-700 cursor-pointer animate-slide-in-right ${idx === activeIndex
                 ? 'text-[#D4AF37] transform scale-105'
                 : 'text-white hover:text-gray-200'
@@ -192,13 +193,35 @@ export default function ExperienciasSection() {
         </div>
       </div>
 
+      {/* Selector móvil (evita solapamientos) */}
+      <div className="lg:hidden absolute bottom-6 left-0 right-0 z-40 px-4">
+        <div className="mx-auto max-w-[520px]">
+          <div className="flex gap-2 overflow-x-auto rounded-full border border-white/10 bg-black/45 backdrop-blur-md p-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {experiences.map((exp, idx) => (
+              <button
+                key={exp.title}
+                type="button"
+                onClick={() => setActiveIndex(idx)}
+                className={`whitespace-nowrap rounded-full px-4 py-2 text-[10px] uppercase tracking-[0.22em] transition-colors ${
+                  idx === activeIndex
+                    ? 'bg-[#D4AF37] text-black'
+                    : 'text-white/80 hover:text-white'
+                }`}
+              >
+                {exp.title}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Content con animaciones de entrada - ajustado para no hacer scroll */}
-      <div className={`relative h-full flex items-center px-6 md:px-12 lg:px-16 z-20 transition-all duration-1000 overflow-hidden ${isTransitioning ? 'translate-y-2 opacity-90' : 'translate-y-0 opacity-100'
+      <div className={`relative h-full flex items-center px-6 md:px-12 lg:px-16 z-20 transition-all duration-1000 overflow-hidden pb-28 sm:pb-32 lg:pb-0 ${isTransitioning ? 'translate-y-2 opacity-90' : 'translate-y-0 opacity-100'
         }`}>
-        <div className="max-w-4xl w-full">
+        <div className="max-w-4xl w-full text-center lg:text-left">
 
           {/* Badge - sin redundancia */}
-          <div className="inline-flex items-center gap-3 mb-6 animate-fade-in">
+          <div className="flex items-center justify-center lg:justify-start gap-3 mb-6 animate-fade-in">
             <div className="w-3 h-3 rounded-full bg-gradient-to-r from-[#D4AF37] to-yellow-500 animate-pulse" />
             <span className="text-[#D4AF37] text-sm font-light tracking-[0.3em] uppercase">
               Servicios
@@ -207,16 +230,16 @@ export default function ExperienciasSection() {
           </div>
 
           {/* Title con efecto de entrada - reducido */}
-          <h1 className="font-serif text-6xl md:text-8xl font-thin text-white mb-3 leading-none tracking-tight animate-slide-up">
+          <h1 className="font-serif text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-thin text-white mb-3 leading-none tracking-tight animate-slide-up">
             {experiences[activeIndex].title}
           </h1>
 
-          <p className="text-amber-300 text-xl md:text-2xl font-light mb-6 italic animate-fade-in-delay">
+          <p className="text-amber-300 text-lg sm:text-xl md:text-2xl font-light mb-5 md:mb-6 italic animate-fade-in-delay">
             {experiences[activeIndex].subtitle}
           </p>
 
           {/* Description - reducido */}
-          <p className="text-white/90 text-lg md:text-xl font-light leading-relaxed max-w-3xl mb-8 animate-fade-in-delay-2">
+          <p className="text-white/90 text-base sm:text-lg md:text-xl font-light leading-relaxed max-w-3xl mx-auto lg:mx-0 mb-7 md:mb-8 animate-fade-in-delay-2">
             {experiences[activeIndex].description}
           </p>
 
@@ -225,9 +248,9 @@ export default function ExperienciasSection() {
             <p className="text-[#D4AF37] text-xs font-medium mb-3 tracking-wider uppercase">
               Experiencias Exclusivas
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {experiences[activeIndex].exclusives.map((exclusive, i) => (
-                <div key={i} className="flex items-center gap-3 animate-slide-in" style={{ animationDelay: `${i * 100}ms` }}>
+                <div key={i} className="flex items-center gap-3 animate-slide-in justify-center lg:justify-start" style={{ animationDelay: `${i * 100}ms` }}>
                   <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
                   <span className="text-white/80 text-sm font-light">{exclusive}</span>
                 </div>
@@ -236,7 +259,7 @@ export default function ExperienciasSection() {
           </div>
 
           {/* CTA único - mejor posicionado (alineado con el contenido) */}
-          <div className="flex justify-start animate-fade-in-delay-4 w-full overflow-hidden pt-4 md:pt-6 pl-3 md:pl-6">
+          <div className="flex justify-center lg:justify-start animate-fade-in-delay-4 w-full overflow-hidden pt-4 md:pt-6 pl-0 lg:pl-6">
             <Link
               href="/contacto"
               className="inline-flex items-center justify-center px-8 py-3 bg-[#D4AF37] text-black font-semibold rounded-full transition-[box-shadow,background-color,filter] duration-200 ease-out hover:bg-[#CDA233] hover:shadow-[0_14px_30px_rgba(0,0,0,0.28),0_0_0_1px_rgba(212,175,55,0.35),inset_0_1px_0_rgba(255,255,255,0.22)] hover:brightness-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
