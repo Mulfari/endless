@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 const heroSlides = [
@@ -11,9 +11,10 @@ const heroSlides = [
 
 type HeroSectionProps = {
   onExplore?: () => void;
+  onHeroReady?: () => void;
 };
 
-export default function HeroSection({ onExplore }: HeroSectionProps) {
+export default function HeroSection({ onExplore, onHeroReady }: HeroSectionProps) {
   // Empezar en el segundo (índice 1) para que la primera impresión sea esa escena
   const [current, setCurrent] = useState(1);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -21,10 +22,22 @@ export default function HeroSection({ onExplore }: HeroSectionProps) {
   // Arreglo de refs que puede contener null inicialmente
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const readyRef = useRef<boolean[]>(heroSlides.map(() => false));
+  const initialIndexRef = useRef(current);
+  const readyFiredRef = useRef(false);
 
   useEffect(() => {
     readyRef.current = ready;
   }, [ready]);
+
+  useEffect(() => {
+    // Avisar al contenedor cuando el primer slide visible ya puede mostrarse bien.
+    if (readyFiredRef.current) return;
+    const idx = initialIndexRef.current;
+    if (ready[idx]) {
+      readyFiredRef.current = true;
+      onHeroReady?.();
+    }
+  }, [ready, onHeroReady]);
 
   // Cambiar vídeo cada 4.5s (intervalo estable)
   useEffect(() => {
