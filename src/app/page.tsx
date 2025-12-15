@@ -27,6 +27,8 @@ export default function Home() {
 
   const [isMobile, setIsMobile] = useState(false);
   const [mobileGateOpen, setMobileGateOpen] = useState(true);
+  const [mobileGateReveal, setMobileGateReveal] = useState(true);
+  const [mobileGateTransitioning, setMobileGateTransitioning] = useState(false);
 
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 1023px)");
@@ -40,28 +42,65 @@ export default function Home() {
     // UX móvil: Hero como "gate". Hasta que el usuario toque "Explore World",
     // NO renderizamos el resto de la página (no hay scroll posible).
     setMobileGateOpen(!isMobile);
+    setMobileGateReveal(!isMobile);
   }, [isMobile]);
 
   useEffect(() => {
-    // UX móvil: bloquear scroll del body y permitir cerrar con ESC cuando el menú está abierto
-    if (!mobileMenuOpen) return;
+    // UX móvil: bloquear scroll del body cuando:
+    // - el menú hamburguesa está abierto, o
+    // - el gate está cerrado (para evitar "scroll bounce" en el Hero)
+    const lockForGate = isMobile && !mobileGateOpen && !mobileMenuOpen;
+    const shouldLock = mobileMenuOpen || lockForGate;
+    if (!shouldLock) return;
 
     const prevOverflow = document.body.style.overflow;
     const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevOverscroll = (document.documentElement.style as any).overscrollBehaviorY;
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
+    (document.documentElement.style as any).overscrollBehaviorY = "none";
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMobileMenuOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);
 
+    const onTouchMove = (e: TouchEvent) => {
+      // Bloquear gesto de scroll cuando el gate está cerrado
+      if (lockForGate) e.preventDefault();
+    };
+    if (lockForGate) window.addEventListener("touchmove", onTouchMove, { passive: false });
+
     return () => {
       document.body.style.overflow = prevOverflow;
       document.documentElement.style.overflow = prevHtmlOverflow;
+      (document.documentElement.style as any).overscrollBehaviorY = prevOverscroll;
       window.removeEventListener("keydown", onKeyDown);
+      if (lockForGate) window.removeEventListener("touchmove", onTouchMove);
     };
-  }, [mobileMenuOpen]);
+  }, [mobileMenuOpen, isMobile, mobileGateOpen]);
+
+  const openGateAndGoTo = (hash: "#servicios" | "#testimonios") => {
+    setMobileGateTransitioning(true);
+    setMobileGateOpen(true);
+    setMobileGateReveal(false);
+
+    requestAnimationFrame(() => {
+      // Activar transición de entrada del contenido
+      setMobileGateReveal(true);
+
+      const el = document.querySelector(hash);
+      if (el) {
+        const headerOffset = 80;
+        const rectTop = (el as HTMLElement).getBoundingClientRect().top;
+        const top = rectTop + window.scrollY - headerOffset;
+        window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+      }
+
+      // Fade-out de overlay de transición
+      window.setTimeout(() => setMobileGateTransitioning(false), 450);
+    });
+  };
 
   useEffect(() => {
     const INTRO_KEY = "endless:introSeen:v1";
@@ -462,7 +501,9 @@ export default function Home() {
                     // En móvil, si el gate está cerrado y el usuario intenta navegar,
                     // abrimos el gate primero.
                     if (isMobile && !mobileGateOpen) {
-                      setMobileGateOpen(true);
+                      openGateAndGoTo(item.href as "#servicios" | "#testimonios");
+                      setMobileMenuOpen(false);
+                      return;
                     }
                     const element = document.querySelector(item.href);
                     if (element) {
@@ -542,23 +583,21 @@ export default function Home() {
           {(!isMobile || !mobileGateOpen) && (
             <HeroSection
               onExplore={() => {
-                // Abrimos el gate y llevamos a Servicios.
-                setMobileGateOpen(true);
-                requestAnimationFrame(() => {
-                  const el = document.querySelector("#servicios");
-                  if (el) {
-                    const headerOffset = 80;
-                    const rectTop = (el as HTMLElement).getBoundingClientRect().top;
-                    const top = rectTop + window.scrollY - headerOffset;
-                    window.scrollTo({ top, behavior: "smooth" });
-                  }
-                });
+                openGateAndGoTo("#servicios");
               }}
             />
           )}
         </div>
         {(!isMobile || mobileGateOpen) && (
-          <>
+          <div
+            className={`transition-all duration-500 ease-out ${
+              isMobile
+                ? mobileGateReveal
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-4"
+                : ""
+            }`}
+          >
             <div id="servicios">
               <div ref={serviciosRef} className="scroll-mt-24">
                 <ExperienciasSection />
@@ -567,15 +606,32 @@ export default function Home() {
             <div id="testimonios">
               <TestimoniosSection />
             </div>
-          </>
+          </div>
         )}
         {/*
           Sección intermedia (oculta por ahora):
           Endless Group / "Lujo hecho a medida..."
         */}
         {/* <IntroSection /> */}
-        {(!isMobile || mobileGateOpen) && <Footer />}
+        {(!isMobile || mobileGateOpen) && (
+          <div
+            className={`transition-all duration-500 ease-out ${
+              isMobile
+                ? mobileGateReveal
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-4"
+                : ""
+            }`}
+          >
+            <Footer />
+          </div>
+        )}
       </main>
+
+      {/* Overlay de transición al abrir el gate (móvil) */}
+      {isMobile && mobileGateTransitioning && (
+        <div className="fixed inset-0 z-[210] bg-black transition-opacity duration-300 opacity-100 pointer-events-none" />
+      )}
     </div >
   );
 }
