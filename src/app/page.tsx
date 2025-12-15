@@ -398,8 +398,6 @@ export default function Home() {
                     setMobileMenuOpen(false);
                   };
 
-                  const isActive = item.id && activeSection === item.id;
-
                   return (
                     <Link
                       key={item.name}
