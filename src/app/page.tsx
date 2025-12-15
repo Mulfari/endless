@@ -17,7 +17,6 @@ export default function Home() {
   const unlockRafRef = useRef<number | null>(null);
   const heroRatioRef = useRef(0);
   const serviciosRatioRef = useRef(0);
-  const mobileMinScrollYRef = useRef<number | null>(null);
 
   const [isAtTop, setIsAtTop] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -27,8 +26,7 @@ export default function Home() {
   // const pathname = usePathname();
 
   const [isMobile, setIsMobile] = useState(false);
-  const [mobileScrollUnlocked, setMobileScrollUnlocked] = useState(true);
-  const [mobileHeroExited, setMobileHeroExited] = useState(false);
+  const [mobileGateOpen, setMobileGateOpen] = useState(true);
 
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 1023px)");
@@ -39,57 +37,14 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // En móvil: bloquear scroll hasta que el usuario toque "Explore World"
-    // (no afecta desktop). El menú hamburguesa sigue funcionando igual.
-    if (!isMobile) {
-      setMobileScrollUnlocked(true);
-      setMobileHeroExited(false);
-      mobileMinScrollYRef.current = null;
-      return;
-    }
-    setMobileScrollUnlocked(false);
-    setMobileHeroExited(false);
-    mobileMinScrollYRef.current = null;
+    // UX móvil: Hero como "gate". Hasta que el usuario toque "Explore World",
+    // NO renderizamos el resto de la página (no hay scroll posible).
+    setMobileGateOpen(!isMobile);
   }, [isMobile]);
 
   useEffect(() => {
-    // UX móvil: una vez entras a Servicios, evitamos "volver" al Hero con scroll hacia arriba.
-    // Esto hace que el Hero se sienta como una pantalla inicial/gate.
-    if (!isMobile) return;
-    if (!mobileHeroExited) return;
-    if (mobileMenuOpen) return;
-
-    const computeMin = () => {
-      if (!serviciosRef.current) return null;
-      const headerOffset = 80;
-      return serviciosRef.current.getBoundingClientRect().top + window.scrollY - headerOffset;
-    };
-
-    // Inicializar el mínimo una vez (y reintentar en el próximo frame por si hay layout)
-    mobileMinScrollYRef.current = computeMin();
-    requestAnimationFrame(() => {
-      mobileMinScrollYRef.current = computeMin();
-    });
-
-    const onScrollClamp = () => {
-      const minY = mobileMinScrollYRef.current;
-      if (minY == null) return;
-      if (window.scrollY < minY) {
-        window.scrollTo(0, minY);
-      }
-    };
-
-    window.addEventListener("scroll", onScrollClamp, { passive: true });
-    onScrollClamp();
-
-    return () => window.removeEventListener("scroll", onScrollClamp);
-  }, [isMobile, mobileHeroExited, mobileMenuOpen]);
-
-  useEffect(() => {
     // UX móvil: bloquear scroll del body y permitir cerrar con ESC cuando el menú está abierto
-    const lockForHero = isMobile && !mobileScrollUnlocked && !mobileMenuOpen;
-    const shouldLock = mobileMenuOpen || lockForHero;
-    if (!shouldLock) return;
+    if (!mobileMenuOpen) return;
 
     const prevOverflow = document.body.style.overflow;
     const prevHtmlOverflow = document.documentElement.style.overflow;
@@ -101,20 +56,12 @@ export default function Home() {
     };
     window.addEventListener("keydown", onKeyDown);
 
-    const onTouchMove = (e: TouchEvent) => {
-      // Solo bloqueamos el gesto de scroll cuando estamos en "lock" del Hero.
-      // Si el menú está abierto, permitimos interacción normal dentro del drawer.
-      if (lockForHero) e.preventDefault();
-    };
-    if (lockForHero) window.addEventListener("touchmove", onTouchMove, { passive: false });
-
     return () => {
       document.body.style.overflow = prevOverflow;
       document.documentElement.style.overflow = prevHtmlOverflow;
       window.removeEventListener("keydown", onKeyDown);
-      if (lockForHero) window.removeEventListener("touchmove", onTouchMove);
     };
-  }, [mobileMenuOpen, isMobile, mobileScrollUnlocked]);
+  }, [mobileMenuOpen]);
 
   useEffect(() => {
     const INTRO_KEY = "endless:introSeen:v1";
@@ -323,14 +270,6 @@ export default function Home() {
             <Link href="/" className="group relative inline-block" onClick={(e) => {
               if (window.location.pathname === '/') {
                 e.preventDefault();
-                // En móvil, si ya "salimos" del Hero, evitamos volver arriba del todo.
-                if (isMobile && mobileHeroExited) {
-                  const minY = mobileMinScrollYRef.current;
-                  if (typeof minY === "number") {
-                    window.scrollTo({ top: minY, behavior: 'smooth' });
-                    return;
-                  }
-                }
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
             }}>
@@ -520,6 +459,11 @@ export default function Home() {
                 const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
                   if (item.scroll) {
                     e.preventDefault();
+                    // En móvil, si el gate está cerrado y el usuario intenta navegar,
+                    // abrimos el gate primero.
+                    if (isMobile && !mobileGateOpen) {
+                      setMobileGateOpen(true);
+                    }
                     const element = document.querySelector(item.href);
                     if (element) {
                       const headerOffset = 80;
@@ -595,36 +539,42 @@ export default function Home() {
 
       <main className="relative">
         <div ref={heroRef} id="hero" className="scroll-mt-24">
-          <HeroSection
-            onExplore={() => {
-              setMobileScrollUnlocked(true);
-              setMobileHeroExited(true);
-              const el = document.querySelector("#servicios");
-              if (el) {
-                const headerOffset = 80;
-                const rectTop = (el as HTMLElement).getBoundingClientRect().top;
-                const top = rectTop + window.scrollY - headerOffset;
-                // Guardar el mínimo para no permitir volver al Hero con scroll
-                mobileMinScrollYRef.current = top;
-                window.scrollTo({ top, behavior: "smooth" });
-              }
-            }}
-          />
+          {(!isMobile || !mobileGateOpen) && (
+            <HeroSection
+              onExplore={() => {
+                // Abrimos el gate y llevamos a Servicios.
+                setMobileGateOpen(true);
+                requestAnimationFrame(() => {
+                  const el = document.querySelector("#servicios");
+                  if (el) {
+                    const headerOffset = 80;
+                    const rectTop = (el as HTMLElement).getBoundingClientRect().top;
+                    const top = rectTop + window.scrollY - headerOffset;
+                    window.scrollTo({ top, behavior: "smooth" });
+                  }
+                });
+              }}
+            />
+          )}
         </div>
-        <div id="servicios">
-          <div ref={serviciosRef} className="scroll-mt-24">
-            <ExperienciasSection />
-          </div>
-        </div>
-        <div id="testimonios">
-          <TestimoniosSection />
-        </div>
+        {(!isMobile || mobileGateOpen) && (
+          <>
+            <div id="servicios">
+              <div ref={serviciosRef} className="scroll-mt-24">
+                <ExperienciasSection />
+              </div>
+            </div>
+            <div id="testimonios">
+              <TestimoniosSection />
+            </div>
+          </>
+        )}
         {/*
           Sección intermedia (oculta por ahora):
           Endless Group / "Lujo hecho a medida..."
         */}
         {/* <IntroSection /> */}
-        <Footer />
+        {(!isMobile || mobileGateOpen) && <Footer />}
       </main>
     </div >
   );
