@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const playfairDisplay = Playfair_Display({
@@ -25,8 +26,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <body className={`${playfairDisplay.variable} ${inter.variable} antialiased`}>
+        <Script id="intro-once-flag" strategy="beforeInteractive">
+          {`
+            try {
+              var key = "endless:introSeen:v1";
+              var seen = localStorage.getItem(key) === "1";
+              document.documentElement.dataset.introSeen = seen ? "1" : "0";
+            } catch (e) {
+              // ignore
+            }
+          `}
+        </Script>
         {children}
       </body>
     </html>

@@ -41,3 +41,8 @@ body {
 .font-sans {
   font-family: var(--font-inter), sans-serif;
 }
+
+/* Intro overlay: mostrar solo una vez (persistido en localStorage) */
+html[data-intro-seen="1"] .intro-overlay {
+  display: none !important;
+}

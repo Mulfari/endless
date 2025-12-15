@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 interface Testimonio {
   id: number;
@@ -127,10 +128,13 @@ export default function TestimoniosSection() {
               
               {/* Imagen de fondo */}
               <div className="absolute inset-0">
-                <img
+                <Image
                   src={testimonios[0].imagen}
                   alt={testimonios[0].experiencia}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 1200px"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  priority
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
               </div>
@@ -194,10 +198,12 @@ export default function TestimoniosSection() {
                 
                 {/* Imagen de fondo más sutil */}
                 <div className="absolute inset-0">
-                  <img
+                  <Image
                     src={testimonio.imagen}
                     alt={testimonio.experiencia}
-                    className="w-full h-full object-cover opacity-20 transition-all duration-500 group-hover:opacity-30"
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 600px"
+                    className="object-cover opacity-20 transition-all duration-500 group-hover:opacity-30"
                   />
                 </div>
 

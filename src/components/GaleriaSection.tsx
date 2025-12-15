@@ -227,10 +227,13 @@ export default function ServiciosSection() {
           <div className="flex justify-center items-center h-full">
             <div className="relative w-full max-w-sm lg:max-w-xl">
               <div className="relative h-[300px] lg:h-[500px] rounded-2xl overflow-hidden shadow-2xl shadow-black/50">
-                <img 
-                  src="/herosection/1.jpeg" 
-                  alt="Endless Experience" 
-                  className="w-full h-full object-cover"
+                <Image
+                  src="/herosection/1.jpeg"
+                  alt="Endless Experience"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 800px"
+                  className="object-cover"
+                  priority
                 />
                 
                 {/* Border dorado sutil */}

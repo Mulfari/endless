@@ -1,137 +1,490 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+// import { usePathname } from "next/navigation";
 import HeroSection from "../components/HeroSection";
+// import IntroSection from "../components/IntroSection";
 import ExperienciasSection from "../components/ExperienciasSection";
-import ServiciosSection from "../components/GaleriaSection";
 import TestimoniosSection from "../components/TestimoniosSection";
 import Footer from "../components/Footer";
 
 export default function Home() {
+  const heroRef = useRef<HTMLDivElement>(null);
+  const serviciosRef = useRef<HTMLDivElement>(null);
+  const isSnappingRef = useRef(false);
+  const snapTargetRef = useRef<number | null>(null);
+  const unlockRafRef = useRef<number | null>(null);
+  const heroRatioRef = useRef(0);
+  const serviciosRatioRef = useRef(0);
+
   const [isAtTop, setIsAtTop] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('');
+  const [scrollProgress, setScrollProgress] = useState(0);
+  // const pathname = usePathname();
 
   useEffect(() => {
+    const INTRO_KEY = "endless:introSeen:v1";
+
+    // Forzar scroll al top al cargar/recargar la página
+    window.scrollTo(0, 0);
+    
+    // También asegurarse de que el body esté en el top
+    if (typeof window !== 'undefined') {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const viewportHeight = window.innerHeight;
-      // Header transparente en HeroSection Y ExperienciasSection
-      const isInHeroOrExperiencias = scrollY < viewportHeight * 2;
-      setIsAtTop(isInHeroOrExperiencias);
+      // Header transparente solo en el tope absoluto (o casi)
+      const isTop = scrollY < 10;
+      setIsAtTop(isTop);
+
+      // Detectar sección activa
+      const sections = ['servicios', 'testimonios'];
+      const headerOffset = 150;
+      
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const section = document.getElementById(sections[i]);
+        if (section) {
+          const rect = section.getBoundingClientRect();
+          if (rect.top <= headerOffset) {
+            setActiveSection(sections[i]);
+            break;
+          }
+        }
+      }
+      
+      // Si estamos en el top, no hay sección activa
+      if (scrollY < 100) {
+        setActiveSection('');
+      }
+
+      // Calcular progreso de scroll
+      const windowHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = windowHeight > 0 ? (scrollY / windowHeight) * 100 : 0;
+      setScrollProgress(Math.min(progress, 100));
     };
-    window.addEventListener('scroll', handleScroll);
     
-    // Trigger animación de carga
-    setTimeout(() => setIsLoaded(true), 300);
-    
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Llamar una vez para inicializar
+
+    // Observador para saber qué tanto se ven Hero/Servicios (evita snaps erráticos)
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.target === heroRef.current) heroRatioRef.current = entry.intersectionRatio;
+          if (entry.target === serviciosRef.current) serviciosRatioRef.current = entry.intersectionRatio;
+        }
+      },
+      { threshold: [0, 0.15, 0.35, 0.55, 0.75, 1] }
+    );
+
+    if (heroRef.current) io.observe(heroRef.current);
+    if (serviciosRef.current) io.observe(serviciosRef.current);
+
+    // Efecto de desplazamiento (snap suave) entre Hero <-> Servicios (solo wheel/desktop)
+    const snapTo = (top: number) => {
+      if (isSnappingRef.current) return;
+      isSnappingRef.current = true;
+      snapTargetRef.current = top;
+
+      // Scroll animado propio (más suave/consistente que behavior:"smooth")
+      const startY = window.scrollY;
+      const targetY = top;
+      const distance = targetY - startY;
+      const durationMs = 1200; // más lento / suave
+      const start = performance.now();
+
+      const easeInOutCubic = (t: number) =>
+        t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+      const tick = (now: number) => {
+        const target = snapTargetRef.current;
+        if (target == null) {
+          isSnappingRef.current = false;
+          unlockRafRef.current = null;
+          return;
+        }
+
+        const elapsed = now - start;
+        const t = Math.min(elapsed / durationMs, 1);
+        const eased = easeInOutCubic(t);
+        const nextY = startY + distance * eased;
+
+        window.scrollTo(0, nextY);
+
+        const done = t >= 1 || Math.abs(window.scrollY - targetY) < 2;
+        if (done) {
+          window.scrollTo(0, targetY);
+          isSnappingRef.current = false;
+          snapTargetRef.current = null;
+          unlockRafRef.current = null;
+          return;
+        }
+
+        unlockRafRef.current = window.requestAnimationFrame(tick);
+      };
+
+      unlockRafRef.current = window.requestAnimationFrame(tick);
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      if (isSnappingRef.current) return;
+      if (!heroRef.current || !serviciosRef.current) return;
+      if (mobileMenuOpen) return;
+      if (e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if (typeof window.matchMedia === "function" && !window.matchMedia("(pointer: fine)").matches) return;
+
+      // Evitar capturar trackpads suaves (umbral) y permitir scroll normal fuera de la zona
+      if (Math.abs(e.deltaY) < 28) return;
+
+      const serviciosRect = serviciosRef.current.getBoundingClientRect();
+      const heroRect = heroRef.current.getBoundingClientRect();
+
+      const serviciosTop = serviciosRect.top + window.scrollY;
+      const heroTop = heroRect.top + window.scrollY;
+
+      // Bajando desde Hero: si Hero domina la pantalla y Servicios está "debajo", snap a Servicios
+      const heroDominant = heroRatioRef.current >= 0.55;
+      const serviciosBelowFold = serviciosRect.top > 80;
+      if (heroDominant && serviciosBelowFold && e.deltaY > 0) {
+        e.preventDefault();
+        snapTo(serviciosTop);
+        return;
+      }
+
+      // Subiendo desde el inicio de Servicios: si estamos cerca del borde superior de Servicios, snap a Hero
+      const serviciosDominant = serviciosRatioRef.current >= 0.55;
+      const nearServiciosTop = Math.abs(serviciosRect.top) <= 90;
+      if (serviciosDominant && nearServiciosTop && e.deltaY < 0) {
+        e.preventDefault();
+        snapTo(heroTop);
+        return;
+      }
+    };
+
+    // Necesitamos preventDefault, por eso passive: false
+    window.addEventListener("wheel", onWheel, { passive: false });
+
+    // Trigger animaciones de carga (Intro) solo la primera vez
+    let introTimeout: number | undefined;
+    let markSeenTimeout: number | undefined;
+
+    let hasSeenIntro = false;
+    try {
+      hasSeenIntro = localStorage.getItem(INTRO_KEY) === "1";
+    } catch {
+      hasSeenIntro = false;
+    }
+
+    if (hasSeenIntro) {
+      setIsLoaded(true);
+      try {
+        document.documentElement.dataset.introSeen = "1";
+      } catch {
+        // ignore
+      }
+    } else {
+      introTimeout = window.setTimeout(() => {
+        setIsLoaded(true);
+        try {
+          localStorage.setItem(INTRO_KEY, "1");
+        } catch {
+          // ignore
+        }
+        // Evitar cortar el fade-out: marcamos el dataset un poco después
+        markSeenTimeout = window.setTimeout(() => {
+          try {
+            document.documentElement.dataset.introSeen = "1";
+          } catch {
+            // ignore
+          }
+        }, 1200);
+      }, 2200);
+    }
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("wheel", onWheel);
+      io.disconnect();
+      if (unlockRafRef.current != null) window.cancelAnimationFrame(unlockRafRef.current);
+      if (introTimeout) window.clearTimeout(introTimeout);
+      if (markSeenTimeout) window.clearTimeout(markSeenTimeout);
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <div className="min-h-screen bg-white">
       {/* Header/Navigation Premium */}
-      <header className={`fixed top-0 w-full transition-all duration-700 z-[100] ${
-        isAtTop 
-          ? 'bg-black/20 backdrop-blur-xl border-b border-white/20 shadow-lg shadow-black/10' 
-          : 'bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-xl shadow-black/5'
-      }`}>
-        <nav className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-5">
-          <div className={`flex items-center justify-between transition-all duration-700 ${
-            isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
-          }`}>
-            
-            {/* Logo premium */}
-            <div className="relative group">
-              <div className={`font-serif text-2xl md:text-3xl font-light transition-all duration-500 tracking-wide ${
-                isAtTop ? 'text-white group-hover:text-[#D4AF37]' : 'text-gray-900 group-hover:text-[#D4AF37]'
-              }`}>
-                Endless Group
+      <header className={`fixed top-0 w-full transition-all duration-500 ease-out z-[100] ${!isLoaded ? 'opacity-0 -translate-y-full' : 'opacity-100 translate-y-0'
+        } ${isAtTop
+          ? 'bg-transparent py-6'
+          : 'bg-white/95 backdrop-blur-xl border-b border-gray-200/50 py-4 shadow-lg shadow-black/5'
+        }`}>
+        <nav className="max-w-[1400px] mx-auto px-8 md:px-16 flex items-center justify-between">
+
+          {/* Logo premium */}
+          <div className="flex-shrink-0">
+            <Link href="/" className="group relative inline-block" onClick={(e) => {
+              if (window.location.pathname === '/') {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}>
+              <div className={`text-2xl md:text-3xl font-extrabold tracking-[-0.02em] transition-all duration-300 ${
+                isAtTop ? 'text-white' : 'text-black'
+              } group-hover:tracking-[-0.01em] group-hover:scale-[1.02]`}>
+                ENDLESS<span className="text-[#D4AF37] transition-colors duration-300 group-hover:text-yellow-400">.</span>
               </div>
-              {/* Línea decorativa bajo el logo */}
-              <div className={`absolute -bottom-1 left-0 h-[1px] transition-all duration-500 bg-gradient-to-r ${
-                isAtTop 
-                  ? 'from-[#D4AF37]/0 group-hover:from-[#D4AF37]/60 to-transparent' 
-                  : 'from-[#D4AF37]/0 group-hover:from-[#D4AF37]/60 to-transparent'
-              } w-0 group-hover:w-full`} />
-            </div>
-            
-            {/* Navegación premium */}
-            <div className="hidden md:flex items-center space-x-10">
+              {/* Subtle underline on hover */}
+              <div className={`absolute -bottom-1 left-0 h-[1px] w-0 transition-all duration-300 group-hover:w-full ${
+                isAtTop ? 'bg-white/50' : 'bg-[#D4AF37]/50'
+              }`} />
+            </Link>
+          </div>
+
+          {/* Right side - Navigation & CTA */}
+          <div className="flex items-center gap-6 md:gap-10">
+
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center gap-8">
               {[
-                { name: 'Inicio', href: '/' },
-                { name: 'Destinos', href: '/destinos' },
-                { name: 'Sobre Nosotros', href: '/sobre' },
-                { name: 'Contacto', href: '/contacto' }
-              ].map((item, idx) => (
-                <Link 
-                  key={item.name}
-                  href={item.href} 
-                  className={`group relative font-light tracking-wide transition-all duration-500 ${
-                    isAtTop 
-                      ? 'text-white/90 hover:text-[#D4AF37]' 
-                      : 'text-gray-700 hover:text-[#D4AF37]'
-                  }`}
-                  style={{ animationDelay: `${idx * 100}ms` }}
-                >
-                  {item.name}
-                  
-                  {/* Efecto hover dorado */}
-                  <div className="absolute -bottom-1 left-0 w-0 h-[1px] bg-gradient-to-r from-[#D4AF37] to-[#D4AF37]/50 transition-all duration-300 group-hover:w-full" />
-                  
-                  {/* Efecto de brillo sutil */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/5 to-transparent rounded-lg blur-sm" />
-                  </div>
-                </Link>
-              ))}
+                { name: 'Servicios', href: '#servicios', scroll: true, id: 'servicios' },
+                { name: 'Testimonios', href: '#testimonios', scroll: true, id: 'testimonios' },
+                { name: 'Nuestra Visión', href: '/nuestra-vision', scroll: false, id: '' }
+              ].map((item) => {
+                const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+                  if (item.scroll) {
+                    e.preventDefault();
+                    const element = document.querySelector(item.href);
+                    if (element) {
+                      const headerOffset = 80;
+                      const elementPosition = element.getBoundingClientRect().top;
+                      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                      window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                      });
+                    }
+                  }
+                };
+
+                const isActive = item.id && activeSection === item.id;
+
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={handleClick}
+                    className={`relative text-[11px] uppercase tracking-[0.2em] font-semibold transition-all duration-300 group ${
+                      isAtTop
+                        ? 'text-white/70 hover:text-white'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {item.name}
+                    {/* Animated underline */}
+                    <span className={`absolute -bottom-1 left-0 h-[2px] transition-all duration-300 ${
+                      isActive 
+                        ? 'w-full' 
+                        : 'w-0 group-hover:w-full'
+                    } ${isAtTop ? 'bg-white' : 'bg-[#D4AF37]'}`} />
+                  </Link>
+                );
+              })}
             </div>
-            
-            {/* Botón de usuario rediseñado */}
-            <div className="flex items-center gap-4">
-              {/* Botón de consulta premium */}
-              <button className={`hidden sm:block px-6 py-2 rounded-full border transition-all duration-500 font-light tracking-wide text-sm ${
-                isAtTop 
-                  ? 'border-[#D4AF37]/40 text-white/90 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37] hover:text-[#D4AF37] hover:shadow-lg hover:shadow-[#D4AF37]/20' 
-                  : 'border-[#D4AF37]/40 text-gray-700 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37] hover:text-[#D4AF37] hover:shadow-lg hover:shadow-[#D4AF37]/20'
-              }`}>
-                Consulta Gratis
-              </button>
-              
-              {/* Icono de usuario premium */}
-              <button className={`group relative p-3 rounded-full transition-all duration-500 ${
-                isAtTop 
-                  ? 'text-white/80 hover:text-[#D4AF37] hover:bg-white/10' 
-                  : 'text-gray-700 hover:text-[#D4AF37] hover:bg-gray-100'
-              }`}
-                aria-label="Perfil de Usuario">
-                
-                {/* Efecto de glow en hover */}
-                <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 bg-gradient-to-r from-[#D4AF37]/10 to-[#D4AF37]/5 blur-sm" />
-                
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="relative w-6 h-6 transition-transform duration-300 group-hover:scale-110">
-                  <circle cx="12" cy="9" r="3.5" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M6 18c0-2.5 3-4 6-4s6 1.5 6 4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+
+            {/* Subtle divider */}
+            <div className={`hidden lg:block w-[1px] h-6 transition-colors duration-300 ${isAtTop ? 'bg-white/20' : 'bg-gray-300'}`} />
+
+            {/* CTA Button & Mobile Toggle */}
+            <div className="flex items-center gap-4 md:gap-6">
+
+              {/* CTA Button - Contáctanos */}
+              <Link
+                href="/contacto"
+                className={`hidden md:inline-flex items-center justify-center px-7 py-2.5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 relative group/cta overflow-hidden ${
+                  isAtTop
+                    ? 'border border-white/40 text-white hover:border-white/60 backdrop-blur-sm bg-white/5'
+                    : 'border border-gray-900 text-gray-900 hover:border-[#D4AF37]'
+                }`}
+              >
+                <span className={`absolute inset-0 transition-all duration-300 ${
+                  isAtTop
+                    ? 'bg-white translate-y-full group-hover/cta:translate-y-0'
+                    : 'bg-[#D4AF37] translate-y-full group-hover/cta:translate-y-0'
+                }`} />
+                <span className={`relative z-10 transition-colors duration-300 ${
+                  isAtTop
+                    ? 'group-hover/cta:text-black'
+                    : 'group-hover/cta:text-white'
+                }`}>
+                  Contáctanos
+                </span>
+              </Link>
+
+              {/* Login Icon (Future Implementation) */}
+              <button
+                className={`hidden md:flex items-center justify-center p-2 transition-all duration-300 group rounded-full ${isAtTop ? 'text-white/90 hover:text-white hover:bg-white/10' : 'text-gray-500 hover:text-[#D4AF37] hover:bg-gray-100'
+                  }`}
+                aria-label="Iniciar Sesión"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 transition-transform duration-300 group-hover:scale-110">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
+              </button>
+
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className={`lg:hidden relative z-[110] p-2 transition-colors duration-300 ${mobileMenuOpen
+                  ? 'text-black'
+                  : isAtTop ? 'text-white hover:text-[#D4AF37]' : 'text-black hover:text-[#D4AF37]'
+                  }`}
+                aria-label="Menú"
+              >
+                <div className="w-6 h-6 flex flex-col justify-center items-end gap-1.5">
+                  <span className={`block h-[2px] bg-current transition-all duration-500 ease-out ${mobileMenuOpen ? 'w-6 rotate-45 translate-y-2' : 'w-6'}`} />
+                  <span className={`block h-[2px] bg-current transition-all duration-500 ease-out ${mobileMenuOpen ? 'w-6 opacity-0' : 'w-5 group-hover:w-6'}`} />
+                  <span className={`block h-[2px] bg-current transition-all duration-500 ease-out ${mobileMenuOpen ? 'w-6 -rotate-45 -translate-y-2' : 'w-3 group-hover:w-6'}`} />
+                </div>
               </button>
             </div>
           </div>
         </nav>
-        
+
+        {/* Mobile Navigation Drawer - Minimalist Slide-in */}
+        <div className={`lg:hidden fixed inset-0 z-[100] transition-all duration-500 ${mobileMenuOpen ? 'visible' : 'invisible delay-300'
+          }`}>
+
+          {/* Backdrop */}
+          <div
+            className={`absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity duration-500 ${mobileMenuOpen ? 'opacity-100' : 'opacity-0'
+              }`}
+            onClick={() => setMobileMenuOpen(false)}
+          />
+
+          {/* Drawer Panel */}
+          <div className={`absolute top-0 right-0 h-full w-[280px] bg-white shadow-2xl transform transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+            }`}>
+
+            <div className="flex flex-col h-full p-8 pt-24">
+
+              {/* Mobile Nav Links */}
+              <div className="flex flex-col gap-6">
+                {[
+                  { name: 'Servicios', href: '#servicios', scroll: true, id: 'servicios' },
+                  { name: 'Testimonios', href: '#testimonios', scroll: true, id: 'testimonios' },
+                  { name: 'Nuestra Visión', href: '/nuestra-vision', scroll: false, id: '' }
+                ].map((item, idx) => {
+                  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+                    if (item.scroll) {
+                      e.preventDefault();
+                      const element = document.querySelector(item.href);
+                      if (element) {
+                        const headerOffset = 80;
+                        const elementPosition = element.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                        window.scrollTo({
+                          top: offsetPosition,
+                          behavior: 'smooth'
+                        });
+                      }
+                    }
+                    setMobileMenuOpen(false);
+                  };
+
+                  const isActive = item.id && activeSection === item.id;
+
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={handleClick}
+                      className={`relative text-lg uppercase tracking-widest font-medium transition-all duration-500 transform flex items-center gap-3 text-gray-900 hover:text-[#D4AF37] ${
+                        mobileMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'
+                      }`}
+                      style={{ transitionDelay: `${100 + idx * 100}ms` }}
+                    >
+                      <span>{item.name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* Spacer */}
+              <div className="flex-1" />
+
+              {/* Mobile Actions */}
+              <div className={`flex flex-col gap-5 transition-all duration-700 delay-300 ${mobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+                }`}>
+                <Link
+                  href="/contacto"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full py-3 rounded-sm border border-[#D4AF37] text-[#D4AF37] text-center text-xs font-bold uppercase tracking-widest hover:bg-[#D4AF37] hover:text-white transition-all duration-300"
+                >
+                  Contáctanos
+                </Link>
+
+                <button
+                  className="flex items-center justify-start gap-3 text-gray-500 hover:text-[#D4AF37] transition-colors duration-300 py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.2" stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="text-xs font-medium uppercase tracking-widest">Iniciar Sesión</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
         {/* Barra de progreso sutil para scroll */}
-        <div className={`absolute bottom-0 left-0 h-[1px] bg-gradient-to-r from-[#D4AF37] to-[#D4AF37]/50 transition-all duration-300 ${
-          isAtTop ? 'w-0' : 'w-full'
-        }`} />
+        <div 
+          className={`absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-yellow-400 to-[#D4AF37] transition-all duration-300 ${
+            isAtTop ? 'opacity-0' : 'opacity-100'
+          }`}
+          style={{ width: `${scrollProgress}%` }}
+        />
       </header>
 
+      {/* Intro Animation Overlay */}
+      <div className={`intro-overlay fixed inset-0 z-[200] bg-black flex items-center justify-center transition-opacity duration-1000 ease-in-out pointer-events-none ${isLoaded ? 'opacity-0' : 'opacity-100'
+        }`}>
+        <div className={`transition-all duration-1000 ease-out transform ${isLoaded ? '-translate-y-12 opacity-0 scale-95' : 'translate-y-0 opacity-100 scale-100'
+          }`}>
+          <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tighter">
+            ENDLESS<span className="text-[#D4AF37]">.</span>
+          </h1>
+        </div>
+      </div>
+
       <main className="relative">
-        <HeroSection />
-        <ExperienciasSection />
-        <ServiciosSection />
-        <TestimoniosSection />
+        <div ref={heroRef} id="hero" className="scroll-mt-24">
+          <HeroSection />
+        </div>
+        <div id="servicios">
+          <div ref={serviciosRef} className="scroll-mt-24">
+            <ExperienciasSection />
+          </div>
+        </div>
+        <div id="testimonios">
+          <TestimoniosSection />
+        </div>
+        {/*
+          Sección intermedia (oculta por ahora):
+          Endless Group / "Lujo hecho a medida..."
+        */}
+        {/* <IntroSection /> */}
         <Footer />
       </main>
-    </div>
+    </div >
   );
 }
 
