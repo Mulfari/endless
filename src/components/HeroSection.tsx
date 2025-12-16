@@ -11,15 +11,13 @@ const heroVideos = [
 
 type HeroSectionProps = {
   onExplore?: () => void;
-  onHeroReady?: () => void;
 };
 
-export default function HeroSection({ onExplore, onHeroReady }: HeroSectionProps) {
+export default function HeroSection({ onExplore }: HeroSectionProps) {
   const [current, setCurrent] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   // Arreglo de refs que puede contener null inicialmente
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
-  const heroReadySentRef = useRef(false);
 
   // Cambiar vídeo cada 4.5s (intervalo estable)
   useEffect(() => {
@@ -92,20 +90,6 @@ export default function HeroSection({ onExplore, onHeroReady }: HeroSectionProps
             muted
             playsInline
             preload="auto"
-            onLoadedData={() => {
-              // Primer frame listo
-              if (idx !== 0) return;
-              if (heroReadySentRef.current) return;
-              heroReadySentRef.current = true;
-              onHeroReady?.();
-            }}
-            onCanPlay={() => {
-              // Fallback: a veces loadeddata no dispara como esperamos en algunos móviles
-              if (idx !== 0) return;
-              if (heroReadySentRef.current) return;
-              heroReadySentRef.current = true;
-              onHeroReady?.();
-            }}
             className="absolute inset-0 w-full h-full object-cover opacity-80"
             style={{
               opacity: idx === current ? 0.6 : 0, // Más sutil para que el texto resalte
