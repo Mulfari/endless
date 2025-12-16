@@ -30,6 +30,7 @@ export default function Home() {
   const [mobileGateOpen, setMobileGateOpen] = useState(true);
   const [mobileGateReveal, setMobileGateReveal] = useState(true);
   const [mobileGateTransitioning, setMobileGateTransitioning] = useState(false);
+  const serviciosMinYRef = useRef<number | null>(null);
 
   const introStartRef = useRef<number | null>(null);
   const introHideTimeoutRef = useRef<number | null>(null);
@@ -187,6 +188,7 @@ export default function Home() {
         const headerOffset = 80;
         const rectTop = (el as HTMLElement).getBoundingClientRect().top;
         const top = rectTop + window.scrollY - headerOffset;
+        if (hash === "#servicios") serviciosMinYRef.current = Math.max(0, top);
         window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
       }
 
@@ -194,6 +196,39 @@ export default function Home() {
       window.setTimeout(() => setMobileGateTransitioning(false), 450);
     });
   };
+
+  useEffect(() => {
+    // En móvil, una vez abierto el gate, evitamos poder "subir" por encima de Servicios
+    // (para que no parezca que vuelves a la pantalla inicial con scroll).
+    if (!isMobile) return;
+    if (!mobileGateOpen) return;
+    if (mobileMenuOpen) return;
+
+    const computeMin = () => {
+      const el = document.querySelector("#servicios");
+      if (!el) return null;
+      const headerOffset = 80;
+      const rectTop = (el as HTMLElement).getBoundingClientRect().top;
+      return Math.max(0, rectTop + window.scrollY - headerOffset);
+    };
+
+    if (serviciosMinYRef.current == null) {
+      serviciosMinYRef.current = computeMin();
+      requestAnimationFrame(() => {
+        serviciosMinYRef.current = computeMin();
+      });
+    }
+
+    const clamp = () => {
+      const minY = serviciosMinYRef.current;
+      if (typeof minY !== "number") return;
+      if (window.scrollY < minY) window.scrollTo(0, minY);
+    };
+
+    window.addEventListener("scroll", clamp, { passive: true });
+    clamp();
+    return () => window.removeEventListener("scroll", clamp);
+  }, [isMobile, mobileGateOpen, mobileMenuOpen]);
 
   useEffect(() => {
     // Forzar scroll al top al cargar/recargar la página
@@ -361,6 +396,14 @@ export default function Home() {
             <Link href="/" className="group relative inline-block" onClick={(e) => {
               if (window.location.pathname === '/') {
                 e.preventDefault();
+                // En móvil, si el gate está abierto, ir al inicio de Servicios (no al top vacío)
+                if (isMobile && mobileGateOpen) {
+                  const minY = serviciosMinYRef.current;
+                  if (typeof minY === "number") {
+                    window.scrollTo({ top: minY, behavior: "smooth" });
+                    return;
+                  }
+                }
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
             }}>

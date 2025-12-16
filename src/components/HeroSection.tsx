@@ -19,6 +19,7 @@ export default function HeroSection({ onExplore, onHeroReady }: HeroSectionProps
   const [current, setCurrent] = useState(1);
   const [isLoaded, setIsLoaded] = useState(false);
   const [ready, setReady] = useState<boolean[]>(() => heroSlides.map(() => false));
+  const [posterReady, setPosterReady] = useState<boolean[]>(() => heroSlides.map(() => false));
   // Arreglo de refs que puede contener null inicialmente
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const readyRef = useRef<boolean[]>(heroSlides.map(() => false));
@@ -33,11 +34,12 @@ export default function HeroSection({ onExplore, onHeroReady }: HeroSectionProps
     // Avisar al contenedor cuando el primer slide visible ya puede mostrarse bien.
     if (readyFiredRef.current) return;
     const idx = initialIndexRef.current;
-    if (ready[idx]) {
+    if (ready[idx] && posterReady[idx]) {
       readyFiredRef.current = true;
-      onHeroReady?.();
+      // Dos RAFs: esperamos un frame de pintura real antes de soltar el loader
+      requestAnimationFrame(() => requestAnimationFrame(() => onHeroReady?.()));
     }
-  }, [ready, onHeroReady]);
+  }, [ready, posterReady, onHeroReady]);
 
   // Cambiar vídeo cada 4.5s (intervalo estable)
   useEffect(() => {
@@ -100,6 +102,35 @@ export default function HeroSection({ onExplore, onHeroReady }: HeroSectionProps
 
   return (
     <section className="relative w-full h-screen flex items-center justify-center bg-black overflow-hidden">
+      {/* Preload posters (evita flashes al primer render) */}
+      <div className="hidden" aria-hidden="true">
+        {heroSlides.map((s, idx) => (
+          <img
+            key={idx}
+            src={s.poster}
+            alt=""
+            loading={idx === initialIndexRef.current ? "eager" : "lazy"}
+            onLoad={() => {
+              setPosterReady((prev) => {
+                if (prev[idx]) return prev;
+                const next = [...prev];
+                next[idx] = true;
+                return next;
+              });
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Poster visible del slide actual hasta que el video esté listo */}
+      <div
+        className="absolute inset-0 bg-center bg-cover transition-opacity duration-700"
+        style={{
+          backgroundImage: `url(${heroSlides[current].poster})`,
+          opacity: ready[current] ? 0 : 0.6,
+        }}
+      />
+
       {/* Vídeos superpuestos con transiciones cinematográficas */}
       <div className="absolute inset-0 w-full h-full">
         {heroSlides.map((slide, idx) => (
