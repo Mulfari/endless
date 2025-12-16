@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
-const heroSlides = [
-  { video: "/herosection/1v.mp4", poster: "/herosection/1.jpeg" },
-  { video: "/herosection/2v.mp4", poster: "/herosection/2.jpeg" },
-  { video: "/herosection/3v.mp4", poster: "/herosection/3.jpeg" },
-] as const;
+const heroVideos = [
+  "/herosection/1v.mp4",
+  "/herosection/2v.mp4",
+  "/herosection/3v.mp4",
+];
 
 type HeroSectionProps = {
   onExplore?: () => void;
@@ -15,37 +15,17 @@ type HeroSectionProps = {
 };
 
 export default function HeroSection({ onExplore, onHeroReady }: HeroSectionProps) {
-  // Empezar en el segundo (índice 1) para que la primera impresión sea esa escena
-  const [current, setCurrent] = useState(1);
+  const [current, setCurrent] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [ready, setReady] = useState<boolean[]>(() => heroSlides.map(() => false));
-  const [posterReady, setPosterReady] = useState<boolean[]>(() => heroSlides.map(() => false));
   // Arreglo de refs que puede contener null inicialmente
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
-  const readyRef = useRef<boolean[]>(heroSlides.map(() => false));
-  const initialIndexRef = useRef(current);
-  const readyFiredRef = useRef(false);
-
-  useEffect(() => {
-    readyRef.current = ready;
-  }, [ready]);
-
-  useEffect(() => {
-    // Avisar al contenedor cuando el primer slide visible ya puede mostrarse bien.
-    if (readyFiredRef.current) return;
-    const idx = initialIndexRef.current;
-    if (ready[idx] && posterReady[idx]) {
-      readyFiredRef.current = true;
-      // Dos RAFs: esperamos un frame de pintura real antes de soltar el loader
-      requestAnimationFrame(() => requestAnimationFrame(() => onHeroReady?.()));
-    }
-  }, [ready, posterReady, onHeroReady]);
+  const heroReadySentRef = useRef(false);
 
   // Cambiar vídeo cada 4.5s (intervalo estable)
   useEffect(() => {
     const id = window.setInterval(() => {
       if (document.visibilityState !== "visible") return;
-      setCurrent(prev => (prev + 1) % heroSlides.length);
+      setCurrent(prev => (prev + 1) % heroVideos.length);
     }, 4500);
     return () => window.clearInterval(id);
   }, []);
@@ -102,61 +82,33 @@ export default function HeroSection({ onExplore, onHeroReady }: HeroSectionProps
 
   return (
     <section className="relative w-full h-screen flex items-center justify-center bg-black overflow-hidden">
-      {/* Preload posters (evita flashes al primer render) */}
-      <div className="hidden" aria-hidden="true">
-        {heroSlides.map((s, idx) => (
-          <img
-            key={idx}
-            src={s.poster}
-            alt=""
-            loading={idx === initialIndexRef.current ? "eager" : "lazy"}
-            onLoad={() => {
-              setPosterReady((prev) => {
-                if (prev[idx]) return prev;
-                const next = [...prev];
-                next[idx] = true;
-                return next;
-              });
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Poster visible del slide actual hasta que el video esté listo */}
-      <div
-        className="absolute inset-0 bg-center bg-cover transition-opacity duration-700"
-        style={{
-          backgroundImage: `url(${heroSlides[current].poster})`,
-          opacity: ready[current] ? 0 : 0.6,
-        }}
-      />
-
       {/* Vídeos superpuestos con transiciones cinematográficas */}
       <div className="absolute inset-0 w-full h-full">
-        {heroSlides.map((slide, idx) => (
+        {heroVideos.map((src, idx) => (
           <video
             key={idx}
             ref={el => { videoRefs.current[idx] = el; }}
-            src={slide.video}
-            poster={slide.poster}
+            src={src}
             muted
             playsInline
             preload="auto"
             onLoadedData={() => {
-              // Marcar ready sin forzar re-renderes repetidos
-              if (!readyRef.current[idx]) {
-                readyRef.current[idx] = true;
-                setReady((prev) => {
-                  const next = [...prev];
-                  next[idx] = true;
-                  return next;
-                });
-              }
+              // Primer frame listo
+              if (idx !== 0) return;
+              if (heroReadySentRef.current) return;
+              heroReadySentRef.current = true;
+              onHeroReady?.();
+            }}
+            onCanPlay={() => {
+              // Fallback: a veces loadeddata no dispara como esperamos en algunos móviles
+              if (idx !== 0) return;
+              if (heroReadySentRef.current) return;
+              heroReadySentRef.current = true;
+              onHeroReady?.();
             }}
             className="absolute inset-0 w-full h-full object-cover opacity-80"
             style={{
-              // Evita “frame negro” inicial: no mostramos el video actual hasta que tenga datos
-              opacity: idx === current && ready[idx] ? 0.6 : 0,
+              opacity: idx === current ? 0.6 : 0, // Más sutil para que el texto resalte
               transition: "opacity 2.5s ease-in-out",
               willChange: "opacity",
             }}

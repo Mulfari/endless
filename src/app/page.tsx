@@ -30,7 +30,6 @@ export default function Home() {
   const [mobileGateOpen, setMobileGateOpen] = useState(true);
   const [mobileGateReveal, setMobileGateReveal] = useState(true);
   const [mobileGateTransitioning, setMobileGateTransitioning] = useState(false);
-  const serviciosMinYRef = useRef<number | null>(null);
 
   const introStartRef = useRef<number | null>(null);
   const introHideTimeoutRef = useRef<number | null>(null);
@@ -50,7 +49,91 @@ export default function Home() {
     // NO renderizamos el resto de la página (no hay scroll posible).
     setMobileGateOpen(!isMobile);
     setMobileGateReveal(!isMobile);
+    setHeroReady(false);
   }, [isMobile]);
+
+  useEffect(() => {
+    // Pantalla de carga: mostrar SOLO una vez y ocultar cuando el Hero tenga listo el primer frame.
+    const INTRO_KEY = "endless:introSeen:v1";
+
+    const clearTimers = () => {
+      if (introHideTimeoutRef.current != null) {
+        window.clearTimeout(introHideTimeoutRef.current);
+        introHideTimeoutRef.current = null;
+      }
+      if (introMaxTimeoutRef.current != null) {
+        window.clearTimeout(introMaxTimeoutRef.current);
+        introMaxTimeoutRef.current = null;
+      }
+      if (introMarkSeenTimeoutRef.current != null) {
+        window.clearTimeout(introMarkSeenTimeoutRef.current);
+        introMarkSeenTimeoutRef.current = null;
+      }
+    };
+
+    const finish = () => {
+      clearTimers();
+      setIsLoaded(true);
+
+      try {
+        localStorage.setItem(INTRO_KEY, "1");
+      } catch {
+        // ignore
+      }
+
+      // Evitar cortar el fade-out: marcamos el dataset un poco después
+      introMarkSeenTimeoutRef.current = window.setTimeout(() => {
+        try {
+          document.documentElement.dataset.introSeen = "1";
+        } catch {
+          // ignore
+        }
+      }, 1100);
+    };
+
+    let hasSeenIntro = false;
+    try {
+      hasSeenIntro = localStorage.getItem(INTRO_KEY) === "1";
+    } catch {
+      hasSeenIntro = false;
+    }
+
+    if (hasSeenIntro) {
+      clearTimers();
+      introStartRef.current = null;
+      setIsLoaded(true);
+      try {
+        document.documentElement.dataset.introSeen = "1";
+      } catch {
+        // ignore
+      }
+      return;
+    }
+
+    // No visto todavía: mantenemos la pantalla hasta que Hero esté listo (o timeout de seguridad)
+    setIsLoaded(false);
+    if (introStartRef.current == null) introStartRef.current = performance.now();
+
+    // Timeout de seguridad por si el media tarda demasiado
+    if (introMaxTimeoutRef.current == null) {
+      introMaxTimeoutRef.current = window.setTimeout(() => finish(), 7000);
+    }
+
+    if (heroReady && introHideTimeoutRef.current == null) {
+      const minVisibleMs = 1200; // evita flash
+      const elapsed = performance.now() - (introStartRef.current ?? performance.now());
+      const delay = Math.max(80, minVisibleMs - elapsed); // margen para evitar "frame malo"
+      introHideTimeoutRef.current = window.setTimeout(() => finish(), delay);
+    }
+  }, [heroReady]);
+
+  useEffect(() => {
+    return () => {
+      if (introHideTimeoutRef.current != null) window.clearTimeout(introHideTimeoutRef.current);
+      if (introMaxTimeoutRef.current != null) window.clearTimeout(introMaxTimeoutRef.current);
+      if (introMarkSeenTimeoutRef.current != null) window.clearTimeout(introMarkSeenTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     // UX móvil: bloquear scroll del body cuando:
@@ -91,89 +174,6 @@ export default function Home() {
     };
   }, [mobileMenuOpen, isMobile, mobileGateOpen]);
 
-  useEffect(() => {
-    // Pantalla de carga: mostrar SOLO una vez y ocultar cuando el Hero esté listo (primera impresión fluida).
-    const INTRO_KEY = "endless:introSeen:v1";
-
-    let hasSeenIntro = false;
-    try {
-      hasSeenIntro = localStorage.getItem(INTRO_KEY) === "1";
-    } catch {
-      hasSeenIntro = false;
-    }
-
-    const clearTimers = () => {
-      if (introHideTimeoutRef.current != null) {
-        window.clearTimeout(introHideTimeoutRef.current);
-        introHideTimeoutRef.current = null;
-      }
-      if (introMaxTimeoutRef.current != null) {
-        window.clearTimeout(introMaxTimeoutRef.current);
-        introMaxTimeoutRef.current = null;
-      }
-      if (introMarkSeenTimeoutRef.current != null) {
-        window.clearTimeout(introMarkSeenTimeoutRef.current);
-        introMarkSeenTimeoutRef.current = null;
-      }
-    };
-
-    const finish = () => {
-      clearTimers();
-      setIsLoaded(true);
-
-      try {
-        localStorage.setItem(INTRO_KEY, "1");
-      } catch {
-        // ignore
-      }
-
-      // Evitar cortar el fade-out: marcamos el dataset un poco después
-      introMarkSeenTimeoutRef.current = window.setTimeout(() => {
-        try {
-          document.documentElement.dataset.introSeen = "1";
-        } catch {
-          // ignore
-        }
-      }, 1100);
-    };
-
-    if (hasSeenIntro) {
-      clearTimers();
-      introStartRef.current = null;
-      setIsLoaded(true);
-      try {
-        document.documentElement.dataset.introSeen = "1";
-      } catch {
-        // ignore
-      }
-      return;
-    }
-
-    // No visto todavía: mantenemos la pantalla hasta que Hero esté listo (o timeout de seguridad)
-    setIsLoaded(false);
-    if (introStartRef.current == null) introStartRef.current = performance.now();
-
-    // Timeout de seguridad por si el media tarda demasiado
-    if (introMaxTimeoutRef.current == null) {
-      introMaxTimeoutRef.current = window.setTimeout(() => finish(), 7000);
-    }
-
-    if (heroReady && introHideTimeoutRef.current == null) {
-      const minVisibleMs = 1200; // evita flash, pero sigue siendo ágil
-      const elapsed = performance.now() - introStartRef.current;
-      const delay = Math.max(0, minVisibleMs - elapsed);
-      introHideTimeoutRef.current = window.setTimeout(() => finish(), delay);
-    }
-  }, [heroReady]);
-
-  useEffect(() => {
-    return () => {
-      if (introHideTimeoutRef.current != null) window.clearTimeout(introHideTimeoutRef.current);
-      if (introMaxTimeoutRef.current != null) window.clearTimeout(introMaxTimeoutRef.current);
-      if (introMarkSeenTimeoutRef.current != null) window.clearTimeout(introMarkSeenTimeoutRef.current);
-    };
-  }, []);
-
   const openGateAndGoTo = (hash: "#servicios" | "#testimonios") => {
     setMobileGateTransitioning(true);
     setMobileGateOpen(true);
@@ -188,7 +188,6 @@ export default function Home() {
         const headerOffset = 80;
         const rectTop = (el as HTMLElement).getBoundingClientRect().top;
         const top = rectTop + window.scrollY - headerOffset;
-        if (hash === "#servicios") serviciosMinYRef.current = Math.max(0, top);
         window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
       }
 
@@ -196,39 +195,6 @@ export default function Home() {
       window.setTimeout(() => setMobileGateTransitioning(false), 450);
     });
   };
-
-  useEffect(() => {
-    // En móvil, una vez abierto el gate, evitamos poder "subir" por encima de Servicios
-    // (para que no parezca que vuelves a la pantalla inicial con scroll).
-    if (!isMobile) return;
-    if (!mobileGateOpen) return;
-    if (mobileMenuOpen) return;
-
-    const computeMin = () => {
-      const el = document.querySelector("#servicios");
-      if (!el) return null;
-      const headerOffset = 80;
-      const rectTop = (el as HTMLElement).getBoundingClientRect().top;
-      return Math.max(0, rectTop + window.scrollY - headerOffset);
-    };
-
-    if (serviciosMinYRef.current == null) {
-      serviciosMinYRef.current = computeMin();
-      requestAnimationFrame(() => {
-        serviciosMinYRef.current = computeMin();
-      });
-    }
-
-    const clamp = () => {
-      const minY = serviciosMinYRef.current;
-      if (typeof minY !== "number") return;
-      if (window.scrollY < minY) window.scrollTo(0, minY);
-    };
-
-    window.addEventListener("scroll", clamp, { passive: true });
-    clamp();
-    return () => window.removeEventListener("scroll", clamp);
-  }, [isMobile, mobileGateOpen, mobileMenuOpen]);
 
   useEffect(() => {
     // Forzar scroll al top al cargar/recargar la página
@@ -396,14 +362,6 @@ export default function Home() {
             <Link href="/" className="group relative inline-block" onClick={(e) => {
               if (window.location.pathname === '/') {
                 e.preventDefault();
-                // En móvil, si el gate está abierto, ir al inicio de Servicios (no al top vacío)
-                if (isMobile && mobileGateOpen) {
-                  const minY = serviciosMinYRef.current;
-                  if (typeof minY === "number") {
-                    window.scrollTo({ top: minY, behavior: "smooth" });
-                    return;
-                  }
-                }
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
             }}>
