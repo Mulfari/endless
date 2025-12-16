@@ -336,7 +336,7 @@ export default function Home() {
               {[
                 { name: 'Servicios', href: '#servicios', scroll: true, id: 'servicios' },
                 { name: 'Testimonios', href: '#testimonios', scroll: true, id: 'testimonios' },
-                { name: 'Nuestra Visión', href: '/nuestra-vision', scroll: false, id: '' }
+                { name: 'Nuestra Visión', href: '/mantenimiento', scroll: false, id: '' }
               ].map((item) => {
                 const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
                   if (item.scroll) {
@@ -497,7 +497,7 @@ export default function Home() {
               {[
                 { name: 'Servicios', href: '#servicios', scroll: true },
                 { name: 'Testimonios', href: '#testimonios', scroll: true },
-                { name: 'Nuestra Visión', href: '/nuestra-vision', scroll: false }
+                { name: 'Nuestra Visión', href: '/mantenimiento', scroll: false }
               ].map((item, idx) => {
                 const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
                   if (item.scroll) {

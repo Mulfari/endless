@@ -151,9 +151,9 @@ export default function Footer() {
             <div className="flex flex-col md:flex-row items-center gap-6 text-sm text-white/60">
               <span>© {new Date().getFullYear()} Endless Group. Todos los derechos reservados.</span>
               <div className="flex items-center gap-6">
-                <Link href="#" className="hover:text-[#D4AF37] transition-colors duration-200">Privacidad</Link>
-                <Link href="#" className="hover:text-[#D4AF37] transition-colors duration-200">Términos</Link>
-                <Link href="#" className="hover:text-[#D4AF37] transition-colors duration-200">Cookies</Link>
+                <Link href="/mantenimiento" className="hover:text-[#D4AF37] transition-colors duration-200">Privacidad</Link>
+                <Link href="/mantenimiento" className="hover:text-[#D4AF37] transition-colors duration-200">Términos</Link>
+                <Link href="/mantenimiento" className="hover:text-[#D4AF37] transition-colors duration-200">Cookies</Link>
               </div>
             </div>
             
