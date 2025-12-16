@@ -387,7 +387,7 @@ export default function Home() {
 
               {/* CTA Button - Contáctanos */}
               <Link
-                href="/contacto"
+                href="/mantenimiento"
                 className={`hidden md:inline-flex items-center justify-center px-7 py-2.5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 relative group/cta overflow-hidden ${
                   isAtTop
                     ? 'border border-white/40 text-white hover:border-white/60 backdrop-blur-sm bg-white/5'
@@ -409,7 +409,8 @@ export default function Home() {
               </Link>
 
               {/* Login Icon (Future Implementation) */}
-              <button
+              <Link
+                href="/mantenimiento"
                 className={`hidden md:flex items-center justify-center p-2 transition-all duration-300 group rounded-full ${isAtTop ? 'text-white/90 hover:text-white hover:bg-white/10' : 'text-gray-500 hover:text-[#D4AF37] hover:bg-gray-100'
                   }`}
                 aria-label="Iniciar Sesión"
@@ -417,7 +418,7 @@ export default function Home() {
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 transition-transform duration-300 group-hover:scale-110">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-              </button>
+              </Link>
 
               {/* Mobile menu button */}
               <button
@@ -549,23 +550,23 @@ export default function Home() {
               }`}
             >
               <Link
-                href="/contacto"
+                href="/mantenimiento"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full py-3.5 rounded-full bg-[#D4AF37] text-black text-center text-xs font-bold uppercase tracking-[0.22em] transition-colors duration-200 hover:bg-[#CDA233]"
               >
                 Contáctanos
               </Link>
 
-              <button
-                type="button"
-                className="flex items-center justify-center gap-3 text-gray-700 hover:text-black transition-colors duration-200 py-3 rounded-full border border-black/10 bg-black/[0.02] hover:bg-black/[0.04]"
+              <Link
+                href="/mantenimiento"
                 onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center gap-3 text-gray-700 hover:text-black transition-colors duration-200 py-3 rounded-full border border-black/10 bg-black/[0.02] hover:bg-black/[0.04]"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.2" stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <span className="text-xs font-medium uppercase tracking-widest">Iniciar Sesión</span>
-              </button>
+              </Link>
             </div>
           </div>
         </div>

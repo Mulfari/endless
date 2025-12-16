@@ -14,7 +14,8 @@ type HeroSectionProps = {
 };
 
 export default function HeroSection({ onExplore }: HeroSectionProps) {
-  const [current, setCurrent] = useState(0);
+  // Empezar con el segundo video (index 1) como primera impresión visual
+  const [current, setCurrent] = useState(1);
   const [isLoaded, setIsLoaded] = useState(false);
   // Arreglo de refs que puede contener null inicialmente
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);

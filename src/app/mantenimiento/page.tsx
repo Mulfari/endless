@@ -26,12 +26,6 @@ export default function MantenimientoPage() {
           >
             Volver al inicio
           </Link>
-          <Link
-            href="/contacto"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-[#D4AF37] text-black hover:bg-[#CDA233] transition-colors duration-200 text-xs font-bold uppercase tracking-[0.22em]"
-          >
-            Contáctanos
-          </Link>
         </div>
       </div>
     </main>

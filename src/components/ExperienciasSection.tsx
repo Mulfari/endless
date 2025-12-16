@@ -261,7 +261,7 @@ export default function ExperienciasSection() {
           {/* CTA único - mejor posicionado (alineado con el contenido) */}
           <div className="flex justify-center lg:justify-start animate-fade-in-delay-4 w-full overflow-hidden pt-4 md:pt-6 pl-0 lg:pl-6">
             <Link
-              href="/contacto"
+              href="/mantenimiento"
               className="inline-flex items-center justify-center px-8 py-3 bg-[#D4AF37] text-black font-semibold rounded-full transition-[box-shadow,background-color,filter] duration-200 ease-out hover:bg-[#CDA233] hover:shadow-[0_14px_30px_rgba(0,0,0,0.28),0_0_0_1px_rgba(212,175,55,0.35),inset_0_1px_0_rgba(255,255,255,0.22)] hover:brightness-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               <span className="text-sm uppercase tracking-[0.2em]">
