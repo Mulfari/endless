@@ -264,14 +264,11 @@ export default function ExperienciasSection() {
         <div className="mx-auto w-full max-w-[520px] pt-6">
           <div className="text-center">
             <p className="text-[#D4AF37] text-[10px] uppercase tracking-[0.35em] font-light">
-              Experiencias extraordinarias
+              Experiencias
             </p>
-            <h2 className="mt-3 font-serif text-3xl font-thin text-white tracking-tight">
+            <h2 className="mt-2 font-serif text-3xl font-thin text-white tracking-tight">
               {experiences[activeIndex].title}<span className="text-[#D4AF37]">.</span>
             </h2>
-            <p className="mt-2 text-white/80 text-sm font-light italic">
-              {experiences[activeIndex].subtitle}
-            </p>
           </div>
 
           {/* Tabs */}
@@ -300,33 +297,42 @@ export default function ExperienciasSection() {
           <div className="mt-6 rounded-3xl border border-white/10 bg-black/35 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/40">
             <div className="p-5">
               <p className="text-white/85 text-sm leading-relaxed">
-                {experiences[activeIndex].description}
+                <span className="block text-white/80 text-xs uppercase tracking-[0.22em] font-medium mb-2">
+                  {experiences[activeIndex].subtitle}
+                </span>
+                <span
+                  className="block"
+                  style={{
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    WebkitLineClamp: 3,
+                    overflow: "hidden",
+                  }}
+                >
+                  {experiences[activeIndex].description}
+                </span>
               </p>
 
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-3">
-                  <p className="text-white/50 text-[10px] uppercase tracking-[0.22em]">Categoría</p>
-                  <p className="mt-1 text-white text-sm font-light">{experiences[activeIndex].location}</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-3">
-                  <p className="text-white/50 text-[10px] uppercase tracking-[0.22em]">Duración</p>
-                  <p className="mt-1 text-white text-sm font-light">{experiences[activeIndex].duration}</p>
-                </div>
+              {/* Highlights mínimos (2) */}
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="inline-flex items-center rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/80">
+                  {experiences[activeIndex].location}
+                </span>
+                <span className="inline-flex items-center rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/80">
+                  {experiences[activeIndex].duration}
+                </span>
               </div>
 
-              <details className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-4">
-                <summary className="cursor-pointer select-none text-[#D4AF37] text-xs uppercase tracking-[0.22em] font-medium">
-                  Experiencias exclusivas
-                </summary>
-                <div className="mt-3 space-y-2">
-                  {experiences[activeIndex].exclusives.map((exclusive) => (
-                    <div key={exclusive} className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-[#D4AF37]" />
-                      <span className="text-white/80 text-sm font-light">{exclusive}</span>
-                    </div>
-                  ))}
-                </div>
-              </details>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {experiences[activeIndex].exclusives.slice(0, 2).map((exclusive) => (
+                  <span
+                    key={exclusive}
+                    className="inline-flex items-center rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1 text-[10px] tracking-wide text-[#D4AF37]"
+                  >
+                    {exclusive}
+                  </span>
+                ))}
+              </div>
 
               <div className="mt-6">
                 <Link
