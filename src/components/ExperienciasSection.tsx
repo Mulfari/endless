@@ -289,8 +289,8 @@ export default function ExperienciasSection() {
       </div>
 
       {/* Mobile: carrusel (1 visible), sin sección larga */}
-      <div className="lg:hidden relative z-20 px-4 pb-[max(20px,env(safe-area-inset-bottom))]">
-        <div className="mx-auto w-full max-w-[520px] pt-6">
+      <div className="lg:hidden relative z-20 px-4 pb-[max(16px,env(safe-area-inset-bottom))] h-[calc(100svh-5rem)] flex flex-col">
+        <div className="mx-auto w-full max-w-[520px] pt-6 flex flex-col flex-1 min-h-0">
           <div className="text-center">
             <p className="text-[#D4AF37] text-[10px] uppercase tracking-[0.35em] font-light">
               Experiencias
@@ -302,47 +302,74 @@ export default function ExperienciasSection() {
 
           <div
             ref={carouselRef}
-            className="mt-6 flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="mt-6 flex-1 min-h-0 flex overflow-x-auto snap-x snap-mandatory pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {experiences.map((exp) => (
               <div
                 key={exp.title}
-                className="snap-center shrink-0 w-full"
+                className="snap-center shrink-0 w-full h-full"
               >
-                <div className="rounded-3xl border border-white/10 bg-black/35 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/40">
-                  <div className="p-6">
-                    <h3 className="font-serif text-3xl font-thin text-white tracking-tight">
-                      {exp.title}<span className="text-[#D4AF37]">.</span>
-                    </h3>
-                    <p className="mt-2 text-white/80 text-sm font-light italic">
-                      {exp.subtitle}
-                    </p>
+                <div className="h-full rounded-3xl border border-white/10 bg-black/35 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/40">
+                  <div className="h-full p-6 flex flex-col">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="font-serif text-3xl font-thin text-white tracking-tight">
+                          {exp.title}<span className="text-[#D4AF37]">.</span>
+                        </h3>
+                        <p className="mt-2 text-white/80 text-sm font-light italic">
+                          {exp.subtitle}
+                        </p>
+                      </div>
+                      <div className="shrink-0 rounded-full border border-white/10 bg-black/25 px-3 py-1">
+                        <span className="text-[#D4AF37] text-[10px] uppercase tracking-[0.22em] font-medium">
+                          {exp.location}
+                        </span>
+                      </div>
+                    </div>
 
-                    <p className="mt-4 text-white/85 text-sm leading-relaxed [display:-webkit-box] [-webkit-line-clamp:4] [-webkit-box-orient:vertical] overflow-hidden">
+                    <p className="mt-4 text-white/85 text-sm leading-relaxed [display:-webkit-box] [-webkit-line-clamp:5] [-webkit-box-orient:vertical] overflow-hidden">
                       {exp.description}
                     </p>
 
-                    <div className="mt-5 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-2 text-white/70 text-xs font-light">
-                        <span className="text-[#D4AF37]">•</span>
-                        <span>{exp.location}</span>
+                    {/* Meta (más detallista pero compacto) */}
+                    <div className="mt-5 grid grid-cols-2 gap-3">
+                      <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
+                        <p className="text-white/50 text-[10px] uppercase tracking-[0.22em]">Duración</p>
+                        <p className="mt-1 text-white text-sm font-light">{exp.duration}</p>
                       </div>
-                      <div className="flex items-center gap-2 text-white/70 text-xs font-light">
-                        <span className="text-[#D4AF37]">•</span>
-                        <span>{exp.duration}</span>
+                      <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
+                        <p className="text-white/50 text-[10px] uppercase tracking-[0.22em]">Temporada</p>
+                        <p className="mt-1 text-white text-sm font-light [display:-webkit-box] [-webkit-line-clamp:1] [-webkit-box-orient:vertical] overflow-hidden">
+                          {exp.season}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-black/25 p-3 col-span-2">
+                        <p className="text-white/50 text-[10px] uppercase tracking-[0.22em]">Desde</p>
+                        <p className="mt-1 text-white text-sm font-light">{exp.price}</p>
                       </div>
                     </div>
 
-                    <div className="mt-6">
-                      <Link
-                        href="/mantenimiento"
-                        className="w-full inline-flex items-center justify-center px-6 py-3 bg-[#D4AF37] text-black font-semibold rounded-full transition-[box-shadow,background-color,filter] duration-200 ease-out hover:bg-[#CDA233] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                      >
-                        <span className="text-xs uppercase tracking-[0.2em]">
-                          Iniciar conversación
-                        </span>
-                      </Link>
+                    {/* Highlights (máx 3 para mantener 1 pantalla) */}
+                    <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+                      <p className="text-[#D4AF37] text-[10px] uppercase tracking-[0.22em] font-medium">
+                        Lo que incluye
+                      </p>
+                      <div className="mt-3 space-y-2">
+                        {exp.exclusives.slice(0, 3).map((exclusive) => (
+                          <div key={exclusive} className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-[#D4AF37]" />
+                            <span className="text-white/80 text-sm font-light">{exclusive}</span>
+                          </div>
+                        ))}
+                        {exp.exclusives.length > 3 && (
+                          <div className="text-white/55 text-xs font-light pl-5">
+                            +{exp.exclusives.length - 3} más
+                          </div>
+                        )}
+                      </div>
                     </div>
+
+                    <div className="mt-auto" />
                   </div>
                 </div>
               </div>
@@ -367,6 +394,18 @@ export default function ExperienciasSection() {
                 }`}
               />
             ))}
+          </div>
+
+          {/* CTA fuera del card, pegado abajo */}
+          <div className="mt-5">
+            <Link
+              href="/mantenimiento"
+              className="w-full inline-flex items-center justify-center px-6 py-3.5 bg-[#D4AF37] text-black font-semibold rounded-full transition-[box-shadow,background-color,filter] duration-200 ease-out hover:bg-[#CDA233] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            >
+              <span className="text-xs uppercase tracking-[0.2em]">
+                Iniciar conversación
+              </span>
+            </Link>
           </div>
         </div>
       </div>
