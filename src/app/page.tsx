@@ -29,8 +29,11 @@ export default function Home() {
   // const pathname = usePathname();
 
   const [isMobile, setIsMobile] = useState(false);
-  const [mobileGateOpen, setMobileGateOpen] = useState(true);
-  const [mobileGateReveal, setMobileGateReveal] = useState(true);
+  // Importante: en móvil, si `mobileGateOpen` arranca en true y `isMobile` cambia a true
+  // tras el primer render, puede haber un frame donde el Hero se desmonta (flicker).
+  // Arrancamos cerrado para evitar “aparece y desaparece” del texto/CTA.
+  const [mobileGateOpen, setMobileGateOpen] = useState(false);
+  const [mobileGateReveal, setMobileGateReveal] = useState(false);
   const [mobileGateTransitioning, setMobileGateTransitioning] = useState(false);
 
   useEffect(() => {
