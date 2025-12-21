@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 
 interface Testimonio {
@@ -81,9 +81,50 @@ const testimonios: Testimonio[] = [
 
 export default function TestimoniosSection() {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [activeMobileIndex, setActiveMobileIndex] = useState(0);
+  const carouselRef = useRef<HTMLDivElement | null>(null);
+  const isReducedMotion = useMemo(() => {
+    try {
+      return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const scrollToIndex = useCallback((idx: number, behavior: ScrollBehavior = "smooth") => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const width = el.clientWidth || 0;
+    el.scrollTo({ left: idx * width, behavior });
+  }, []);
+
+  // Mobile carousel: sincronizar índice con el scroll (snap)
+  useEffect(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        const width = el.clientWidth || 1;
+        const idx = Math.round(el.scrollLeft / width);
+        if (idx !== activeMobileIndex && idx >= 0 && idx < testimonios.length) {
+          setActiveMobileIndex(idx);
+        }
+      });
+    };
+
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, [activeMobileIndex]);
 
   return (
-    <section className="relative min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-24 overflow-hidden">
+    <section className="relative min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-16 md:py-24 overflow-hidden">
       
       {/* Background decorativo sutil */}
       <div className="absolute inset-0 overflow-hidden">
@@ -94,7 +135,7 @@ export default function TestimoniosSection() {
       <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12">
         
         {/* Header minimalista */}
-        <div className="text-center mb-20">
+        <div className="text-center mb-12 md:mb-20">
           <div className="inline-flex items-center gap-3 mb-6">
             <div className="w-1 h-1 rounded-full bg-[#D4AF37]"></div>
             <span className="text-gray-600 text-sm font-light tracking-[0.2em] uppercase">
@@ -113,8 +154,93 @@ export default function TestimoniosSection() {
           </p>
         </div>
 
+        {/* Mobile: carrusel (1 visible) */}
+        <div className="md:hidden">
+          <div
+            ref={carouselRef}
+            className="flex overflow-x-auto snap-x snap-mandatory pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {testimonios.map((t) => (
+              <div key={t.id} className="snap-center shrink-0 w-full">
+                <div className="relative h-[420px] rounded-3xl overflow-hidden shadow-xl border border-gray-100 bg-white">
+                  {/* Imagen de fondo (cinemático) */}
+                  <div className="absolute inset-0">
+                    <Image
+                      src={t.imagen}
+                      alt={t.experiencia}
+                      fill
+                      sizes="100vw"
+                      className="object-cover"
+                      priority={false}
+                    />
+                    {/* Overlays sutiles */}
+                    <div className="absolute inset-0 bg-black/20" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/15" />
+                  </div>
+
+                  {/* Contenido */}
+                  <div className="absolute inset-0 p-6 flex flex-col justify-end">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <span className="bg-[#D4AF37]/90 text-black text-[11px] font-medium px-3 py-1 rounded-full tracking-wide">
+                        {t.experiencia}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <div
+                            key={i}
+                            className={`w-3.5 h-3.5 ${i < t.rating ? "text-[#D4AF37]" : "text-white/25"}`}
+                          >
+                            <svg fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <blockquote className="text-white text-xl font-light leading-relaxed italic [display:-webkit-box] [-webkit-line-clamp:4] [-webkit-box-orient:vertical] overflow-hidden">
+                      &ldquo;{t.texto}&rdquo;
+                    </blockquote>
+
+                    <div className="mt-5 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/10">
+                        <span className="text-white text-sm font-light">
+                          {t.nombre.charAt(0)}
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-white font-medium text-sm truncate">{t.nombre}</h4>
+                        <p className="text-white/75 text-xs truncate">{t.cargo ?? t.ubicacion}</p>
+                        <p className="text-white/55 text-[11px] truncate">{t.ubicacion}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Dots */}
+          <div className="mt-5 flex items-center justify-between gap-3">
+            {/* Flechas */}
+            <div className="flex-1 flex items-center justify-center gap-2">
+              {testimonios.map((t, idx) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  aria-label={`Ir a testimonio de ${t.nombre}`}
+                  onClick={() => scrollToIndex(idx, isReducedMotion ? "auto" : "smooth")}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    idx === activeMobileIndex ? "w-6 bg-[#D4AF37]" : "w-2 bg-gray-300"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Grid asimétrico de testimonios */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-auto">
+        <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-auto">
           
           {/* Testimonio destacado - más grande */}
           <div 
@@ -134,7 +260,7 @@ export default function TestimoniosSection() {
                   fill
                   sizes="(max-width: 1024px) 100vw, 1200px"
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  priority
+                  priority={false}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
               </div>

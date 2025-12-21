@@ -71,6 +71,7 @@ export default function ExperienciasSection() {
   const [enableVideo, setEnableVideo] = useState(false);
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
   const sectionRef = useRef<HTMLElement>(null);
+  const carouselRef = useRef<HTMLDivElement | null>(null);
   const posterFor = (video: string) => video.replace("v.mp4", ".jpeg");
 
   useEffect(() => {
@@ -119,6 +120,32 @@ export default function ExperienciasSection() {
     });
   }, [activeIndex, enableVideo]);
 
+  // Mobile carousel: sincronizar `activeIndex` con el scroll (snap)
+  useEffect(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        const width = el.clientWidth || 1;
+        const idx = Math.round(el.scrollLeft / width);
+        if (idx !== activeIndex && idx >= 0 && idx < experiences.length) {
+          setPreviousIndex(activeIndex);
+          setActiveIndex(idx);
+        }
+      });
+    };
+
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, [activeIndex]);
+
   return (
     <section
       ref={sectionRef}
@@ -141,48 +168,50 @@ export default function ExperienciasSection() {
           }`} />
       </div>
 
-      {/* Fondo: desktop con video / móvil con imagen (mejor UX en pantallas pequeñas) */}
-      {enableVideo ? (
-        <div className="absolute inset-0 overflow-hidden hidden lg:block">
-          {[...new Set([activeIndex, previousIndex].filter((v): v is number => v !== null))].map((idx) => {
-            const exp = experiences[idx];
-            return (
-              <div
-                key={idx}
-                className={`absolute inset-0 transition-all duration-[4000ms] ease-out ${idx === activeIndex ? 'opacity-100' : 'opacity-0'
-                  }`}
-              >
-                <video
-                  ref={(el) => { videoRefs.current[idx] = el; }}
-                  muted
-                  loop
-                  playsInline
-                  preload={idx === activeIndex ? "auto" : "metadata"}
-                  className="absolute inset-0 w-full h-full object-cover"
+      {/* Fondo: video en desktop cuando esté habilitado; imagen fallback en cualquier caso */}
+      <div className="absolute inset-0 overflow-hidden">
+        {enableVideo ? (
+          <div className="hidden lg:block absolute inset-0">
+            {[...new Set([activeIndex, previousIndex].filter((v): v is number => v !== null))].map((idx) => {
+              const exp = experiences[idx];
+              return (
+                <div
+                  key={idx}
+                  className={`absolute inset-0 transition-all duration-[4000ms] ease-out ${idx === activeIndex ? 'opacity-100' : 'opacity-0'
+                    }`}
                 >
-                  <source src={exp.video} type="video/mp4" />
-                </video>
+                  <video
+                    ref={(el) => { videoRefs.current[idx] = el; }}
+                    muted
+                    loop
+                    playsInline
+                    preload={idx === activeIndex ? "auto" : "metadata"}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  >
+                    <source src={exp.video} type="video/mp4" />
+                  </video>
 
-                {/* Gradient Overlays mejorados */}
-                <div className={`absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent transition-all duration-[4000ms] ${isTransitioning ? 'from-black/95 via-black/60 to-black/20' : ''
-                  }`} />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40" />
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="absolute inset-0 overflow-hidden lg:hidden">
-          <Image
-            src={posterFor(experiences[activeIndex].video)}
-            alt={`${experiences[activeIndex].title} background`}
-            fill
-            sizes="100vw"
-            className="object-cover opacity-35"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/30" />
-        </div>
-      )}
+                  {/* Gradient Overlays mejorados */}
+                  <div className={`absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent transition-all duration-[4000ms] ${isTransitioning ? 'from-black/95 via-black/60 to-black/20' : ''
+                    }`} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40" />
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <>
+            <Image
+              src={posterFor(experiences[activeIndex].video)}
+              alt={`${experiences[activeIndex].title} background`}
+              fill
+              sizes="100vw"
+              className="object-cover opacity-35"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/30" />
+          </>
+        )}
+      </div>
 
       {/* Overlay gradiente lateral derecho mejorado */}
       <div className="hidden lg:block absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-black/70 via-black/30 to-transparent pointer-events-none z-10 animate-fade-in-slow"></div>
@@ -259,92 +288,85 @@ export default function ExperienciasSection() {
         </div>
       </div>
 
-      {/* Mobile: layout tipo "cards" (más natural que el modo escritorio) */}
+      {/* Mobile: carrusel (1 visible), sin sección larga */}
       <div className="lg:hidden relative z-20 px-4 pb-[max(20px,env(safe-area-inset-bottom))]">
         <div className="mx-auto w-full max-w-[520px] pt-6">
           <div className="text-center">
             <p className="text-[#D4AF37] text-[10px] uppercase tracking-[0.35em] font-light">
               Experiencias
             </p>
-            <h2 className="mt-2 font-serif text-3xl font-thin text-white tracking-tight">
-              {experiences[activeIndex].title}<span className="text-[#D4AF37]">.</span>
-            </h2>
+            <p className="mt-2 text-white/70 text-sm font-light">
+              Desliza para ver más
+            </p>
           </div>
 
-          {/* Tabs */}
-          <div className="mt-6 flex gap-2 overflow-x-auto rounded-full border border-white/10 bg-black/45 backdrop-blur-md p-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {experiences.map((exp, idx) => (
-              <button
+          <div
+            ref={carouselRef}
+            className="mt-6 flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {experiences.map((exp) => (
+              <div
                 key={exp.title}
-                type="button"
-                onClick={() => {
-                  if (idx === activeIndex) return;
-                  setPreviousIndex(activeIndex);
-                  setActiveIndex(idx);
-                }}
-                className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-[10px] uppercase tracking-[0.22em] transition-colors ${
-                  idx === activeIndex
-                    ? 'bg-[#D4AF37] text-black'
-                    : 'text-white/80 hover:text-white'
-                }`}
+                className="snap-center shrink-0 w-full"
               >
-                {exp.title}
-              </button>
+                <div className="rounded-3xl border border-white/10 bg-black/35 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/40">
+                  <div className="p-6">
+                    <h3 className="font-serif text-3xl font-thin text-white tracking-tight">
+                      {exp.title}<span className="text-[#D4AF37]">.</span>
+                    </h3>
+                    <p className="mt-2 text-white/80 text-sm font-light italic">
+                      {exp.subtitle}
+                    </p>
+
+                    <p className="mt-4 text-white/85 text-sm leading-relaxed [display:-webkit-box] [-webkit-line-clamp:4] [-webkit-box-orient:vertical] overflow-hidden">
+                      {exp.description}
+                    </p>
+
+                    <div className="mt-5 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-2 text-white/70 text-xs font-light">
+                        <span className="text-[#D4AF37]">•</span>
+                        <span>{exp.location}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-white/70 text-xs font-light">
+                        <span className="text-[#D4AF37]">•</span>
+                        <span>{exp.duration}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-6">
+                      <Link
+                        href="/mantenimiento"
+                        className="w-full inline-flex items-center justify-center px-6 py-3 bg-[#D4AF37] text-black font-semibold rounded-full transition-[box-shadow,background-color,filter] duration-200 ease-out hover:bg-[#CDA233] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                      >
+                        <span className="text-xs uppercase tracking-[0.2em]">
+                          Iniciar conversación
+                        </span>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
 
-          {/* Card */}
-          <div className="mt-6 rounded-3xl border border-white/10 bg-black/35 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/40">
-            <div className="p-5">
-              <p className="text-white/85 text-sm leading-relaxed">
-                <span className="block text-white/80 text-xs uppercase tracking-[0.22em] font-medium mb-2">
-                  {experiences[activeIndex].subtitle}
-                </span>
-                <span
-                  className="block"
-                  style={{
-                    display: "-webkit-box",
-                    WebkitBoxOrient: "vertical",
-                    WebkitLineClamp: 3,
-                    overflow: "hidden",
-                  }}
-                >
-                  {experiences[activeIndex].description}
-                </span>
-              </p>
-
-              {/* Highlights mínimos (2) */}
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className="inline-flex items-center rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/80">
-                  {experiences[activeIndex].location}
-                </span>
-                <span className="inline-flex items-center rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/80">
-                  {experiences[activeIndex].duration}
-                </span>
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {experiences[activeIndex].exclusives.slice(0, 2).map((exclusive) => (
-                  <span
-                    key={exclusive}
-                    className="inline-flex items-center rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1 text-[10px] tracking-wide text-[#D4AF37]"
-                  >
-                    {exclusive}
-                  </span>
-                ))}
-              </div>
-
-              <div className="mt-6">
-                <Link
-                  href="/mantenimiento"
-                  className="w-full inline-flex items-center justify-center px-6 py-3 bg-[#D4AF37] text-black font-semibold rounded-full transition-[box-shadow,background-color,filter] duration-200 ease-out hover:bg-[#CDA233] hover:shadow-[0_14px_30px_rgba(0,0,0,0.28),0_0_0_1px_rgba(212,175,55,0.35),inset_0_1px_0_rgba(255,255,255,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                >
-                  <span className="text-xs uppercase tracking-[0.2em]">
-                    Iniciar conversación
-                  </span>
-                </Link>
-              </div>
-            </div>
+          {/* Dots */}
+          <div className="mt-4 flex items-center justify-center gap-2">
+            {experiences.map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                aria-label={`Ir a ${experiences[idx].title}`}
+                onClick={() => {
+                  const el = carouselRef.current;
+                  if (!el) return;
+                  const width = el.clientWidth || 0;
+                  el.scrollTo({ left: idx * width, behavior: "smooth" });
+                }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  idx === activeIndex ? "w-6 bg-[#D4AF37]" : "w-2 bg-white/25"
+                }`}
+              />
+            ))}
           </div>
         </div>
       </div>

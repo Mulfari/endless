@@ -19,7 +19,10 @@ export default function Home() {
   const serviciosRatioRef = useRef(0);
 
   const [isAtTop, setIsAtTop] = useState(true);
-  const [isLoaded, setIsLoaded] = useState(false);
+  // Intro/Loader: por defecto NO se muestra en SSR para evitar "flash" en cargas rápidas.
+  // Solo se activa en cliente si realmente corresponde (primera visita).
+  const [introStage, setIntroStage] = useState<"checking" | "showing" | "hiding" | "done">("checking");
+  const [introVisible, setIntroVisible] = useState(false); // para fade-in suave (evita “pop”)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('');
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -108,6 +111,8 @@ export default function Home() {
 
   useEffect(() => {
     const INTRO_KEY = "endless:introSeen:v1";
+    const INTRO_MIN_VISIBLE_MS = 1200;
+    const INTRO_FADE_MS = 900;
 
     // Forzar scroll al top al cargar/recargar la página
     window.scrollTo(0, 0);
@@ -251,41 +256,49 @@ export default function Home() {
     // Necesitamos preventDefault, por eso passive: false
     window.addEventListener("wheel", onWheel, { passive: false });
 
-    // Trigger animaciones de carga (Intro) solo la primera vez
-    let introTimeout: number | undefined;
-    let markSeenTimeout: number | undefined;
+    // Intro (branding) sólo si NO se ha visto antes.
+    // Leemos primero el dataset (set por `beforeInteractive` en layout), y como respaldo localStorage.
+    let introTimer: number | undefined;
+    let hideTimer: number | undefined;
+    let fadeInRaf: number | undefined;
 
-    let hasSeenIntro = false;
+    const hasSeenViaDataset = document.documentElement.dataset.introSeen === "1";
+    let hasSeenViaStorage = false;
     try {
-      hasSeenIntro = localStorage.getItem(INTRO_KEY) === "1";
+      hasSeenViaStorage = localStorage.getItem(INTRO_KEY) === "1";
     } catch {
-      hasSeenIntro = false;
+      hasSeenViaStorage = false;
     }
 
-    if (hasSeenIntro) {
-      setIsLoaded(true);
-      try {
-        document.documentElement.dataset.introSeen = "1";
-      } catch {
-        // ignore
-      }
+    if (hasSeenViaDataset || hasSeenViaStorage) {
+      setIntroStage("done");
     } else {
-      introTimeout = window.setTimeout(() => {
-        setIsLoaded(true);
-        try {
-          localStorage.setItem(INTRO_KEY, "1");
-        } catch {
-          // ignore
-        }
-        // Evitar cortar el fade-out: marcamos el dataset un poco después
-        markSeenTimeout = window.setTimeout(() => {
+      setIntroStage("showing");
+      setIntroVisible(false);
+
+      // Fade-in en el siguiente frame para evitar que “aparezca de repente”
+      fadeInRaf = window.requestAnimationFrame(() => {
+        setIntroVisible(true);
+
+        introTimer = window.setTimeout(() => {
+          setIntroStage("hiding");
+          // Marcar como visto al empezar a cerrar, para que futuras cargas no flasheen.
           try {
-            document.documentElement.dataset.introSeen = "1";
+            localStorage.setItem(INTRO_KEY, "1");
           } catch {
             // ignore
           }
-        }, 1200);
-      }, 2200);
+
+          hideTimer = window.setTimeout(() => {
+            setIntroStage("done");
+            try {
+              document.documentElement.dataset.introSeen = "1";
+            } catch {
+              // ignore
+            }
+          }, INTRO_FADE_MS);
+        }, INTRO_MIN_VISIBLE_MS);
+      });
     }
 
     return () => {
@@ -293,15 +306,16 @@ export default function Home() {
       window.removeEventListener("wheel", onWheel);
       io.disconnect();
       if (unlockRafRef.current != null) window.cancelAnimationFrame(unlockRafRef.current);
-      if (introTimeout) window.clearTimeout(introTimeout);
-      if (markSeenTimeout) window.clearTimeout(markSeenTimeout);
+      if (introTimer) window.clearTimeout(introTimer);
+      if (hideTimer) window.clearTimeout(hideTimer);
+      if (fadeInRaf != null) window.cancelAnimationFrame(fadeInRaf);
     };
   }, [mobileMenuOpen]);
 
   return (
     <div className="min-h-screen bg-white">
       {/* Header/Navigation Premium */}
-      <header className={`fixed top-0 w-full transition-all duration-500 ease-out z-[100] ${!isLoaded ? 'opacity-0 -translate-y-full' : 'opacity-100 translate-y-0'
+      <header className={`fixed top-0 w-full transition-all duration-500 ease-out z-[100] ${introStage === 'showing' || introStage === 'hiding' ? 'opacity-0 -translate-y-full' : 'opacity-100 translate-y-0'
         } ${isAtTop
           ? 'bg-transparent py-6'
           : 'bg-white/95 backdrop-blur-xl border-b border-gray-200/50 py-4 shadow-lg shadow-black/5'
@@ -573,15 +587,25 @@ export default function Home() {
       </div>
 
       {/* Intro Animation Overlay */}
-      <div className={`intro-overlay fixed inset-0 z-[200] bg-black flex items-center justify-center transition-opacity duration-1000 ease-in-out pointer-events-none ${isLoaded ? 'opacity-0' : 'opacity-100'
-        }`}>
-        <div className={`transition-all duration-1000 ease-out transform ${isLoaded ? '-translate-y-12 opacity-0 scale-95' : 'translate-y-0 opacity-100 scale-100'
-          }`}>
-          <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tighter">
-            ENDLESS<span className="text-[#D4AF37]">.</span>
-          </h1>
+      {(introStage === "showing" || introStage === "hiding") && (
+        <div
+          className={`intro-overlay fixed inset-0 z-[200] bg-black flex items-center justify-center transition-opacity duration-1000 ease-in-out pointer-events-none ${
+            introStage === "hiding" ? "opacity-0" : (introVisible ? "opacity-100" : "opacity-0")
+          }`}
+        >
+          <div
+            className={`transition-all duration-1000 ease-out transform ${
+              introStage === "hiding"
+                ? "-translate-y-12 opacity-0 scale-95"
+                : (introVisible ? "translate-y-0 opacity-100 scale-100" : "translate-y-4 opacity-0 scale-[0.98]")
+            }`}
+          >
+            <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tighter">
+              ENDLESS<span className="text-[#D4AF37]">.</span>
+            </h1>
+          </div>
         </div>
-      </div>
+      )}
 
       <main className="relative">
         <div ref={heroRef} id="hero" className="scroll-mt-24">
