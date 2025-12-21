@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
-const heroVideos = [
-  "/herosection/1v.mp4",
-  "/herosection/2v.mp4",
-  "/herosection/3v.mp4",
-];
+const heroMedia = [
+  { video: "/herosection/1v.mp4", poster: "/herosection/1.jpeg" },
+  { video: "/herosection/2v.mp4", poster: "/herosection/2.jpeg" },
+  { video: "/herosection/3v.mp4", poster: "/herosection/3.jpeg" },
+] as const;
 
 type HeroSectionProps = {
   onExplore?: () => void;
@@ -16,36 +16,70 @@ type HeroSectionProps = {
 export default function HeroSection({ onExplore }: HeroSectionProps) {
   // Empezar con el segundo video (index 1) como primera impresión visual
   const [current, setCurrent] = useState(1);
+  const [previous, setPrevious] = useState<number | null>(null);
+  const [fadeInCurrent, setFadeInCurrent] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  // Arreglo de refs que puede contener null inicialmente
-  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const [enableVideo, setEnableVideo] = useState(true);
+  const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
+  const currentRef = useRef(1);
 
   // Cambiar vídeo cada 4.5s (intervalo estable)
   useEffect(() => {
     const id = window.setInterval(() => {
       if (document.visibilityState !== "visible") return;
-      setCurrent(prev => (prev + 1) % heroVideos.length);
+      const cur = currentRef.current;
+      const next = (cur + 1) % heroMedia.length;
+      setPrevious(cur);
+      setCurrent(next);
+      // Hacemos que el nuevo video entre desde 0 -> 0.6 en el siguiente frame
+      // para evitar el "doble exposure" (sombra) al cambiar.
+      setFadeInCurrent(false);
     }, 4500);
     return () => window.clearInterval(id);
   }, []);
 
-  // Al montar, pausamos todos y pre-cargamos, luego activamos animaciones
   useEffect(() => {
-    videoRefs.current.forEach((vid) => {
-      if (vid) {
-        vid.pause();
-        vid.preload = "auto";
-      }
-    });
-    // Trigger animaciones después de un breve delay
+    currentRef.current = current;
+  }, [current]);
+
+  useEffect(() => {
+    if (!enableVideo) return;
+    // Activar el fade-in del current en el siguiente frame para que haya transición
+    // incluso cuando el <video> se monta por primera vez.
+    const raf = window.requestAnimationFrame(() => setFadeInCurrent(true));
+    return () => window.cancelAnimationFrame(raf);
+  }, [current, enableVideo]);
+
+  // Desactivar videos si el usuario pide menos animación o tiene ahorro de datos
+  useEffect(() => {
+    try {
+      const prefersReducedMotion =
+        typeof window !== "undefined" &&
+        window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+      const saveData =
+        typeof navigator !== "undefined" &&
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (navigator as any).connection?.saveData === true;
+
+      setEnableVideo(!(prefersReducedMotion || saveData));
+    } catch {
+      setEnableVideo(true);
+    }
+  }, []);
+
+  // Trigger animaciones después de un breve delay
+  useEffect(() => {
     const t = setTimeout(() => setIsLoaded(true), 500);
     return () => clearTimeout(t);
   }, []);
 
   // Reproducir sólo el vídeo actual y pausar el resto (solo si la pestaña está visible)
   useEffect(() => {
+    if (!enableVideo) return;
+
     const playCurrentIfVisible = () => {
-      videoRefs.current.forEach((vid, idx) => {
+      Object.entries(videoRefs.current).forEach(([key, vid]) => {
+        const idx = Number(key);
         if (!vid) return;
         if (idx === current) {
           if (document.visibilityState === "visible") {
@@ -64,6 +98,14 @@ export default function HeroSection({ onExplore }: HeroSectionProps) {
 
     playCurrentIfVisible();
 
+    // Pausar el anterior tras la transición para reducir CPU/batería
+    if (previous !== null && previous !== current) {
+      const t = window.setTimeout(() => {
+        videoRefs.current[previous]?.pause();
+      }, 3000);
+      return () => window.clearTimeout(t);
+    }
+
     const onVisibility = () => {
       if (document.visibilityState === "visible") {
         const vid = videoRefs.current[current];
@@ -71,33 +113,48 @@ export default function HeroSection({ onExplore }: HeroSectionProps) {
           try { void vid.play(); } catch { }
         }
       } else {
-        videoRefs.current.forEach(v => v?.pause());
+        Object.values(videoRefs.current).forEach(v => v?.pause());
       }
     };
 
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
-  }, [current]);
+  }, [current, previous, enableVideo]);
+
+  const indicesToRender = useMemo(() => {
+    if (!enableVideo) return [];
+    // Importante: renderizamos primero el anterior y al final el actual,
+    // así el actual queda arriba en el stacking (mismo look que antes).
+    return [previous, current].filter((v): v is number => v !== null);
+  }, [current, previous, enableVideo]);
 
   return (
     <section className="relative w-full h-screen flex items-center justify-center bg-black overflow-hidden">
       {/* Vídeos superpuestos con transiciones cinematográficas */}
       <div className="absolute inset-0 w-full h-full">
-        {heroVideos.map((src, idx) => (
+        {indicesToRender.map((idx) => (
           <video
             key={idx}
-            ref={el => { videoRefs.current[idx] = el; }}
-            src={src}
+            ref={(el) => { videoRefs.current[idx] = el; }}
+            poster={heroMedia[idx].poster}
             muted
             playsInline
-            preload="auto"
+            preload={idx === current ? "auto" : "metadata"}
             className="absolute inset-0 w-full h-full object-cover opacity-80"
             style={{
-              opacity: idx === current ? 0.6 : 0, // Más sutil para que el texto resalte
+              // Crossfade limpio:
+              // - El anterior baja de 0.6 -> 0 (por transición)
+              // - El actual sube de 0 -> 0.6 (en el siguiente frame)
+              opacity:
+                idx === current
+                  ? (fadeInCurrent ? 0.6 : 0)
+                  : 0,
               transition: "opacity 2.5s ease-in-out",
               willChange: "opacity",
             }}
-          />
+          >
+            <source src={heroMedia[idx].video} type="video/mp4" />
+          </video>
         ))}
       </div>
 

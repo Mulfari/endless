@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 
 interface Experience {
@@ -64,27 +65,64 @@ const experiences: Experience[] = [
 
 export default function ExperienciasSection() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [previousIndex, setPreviousIndex] = useState<number | null>(null);
   const [isTransitioning] = useState(false);
-  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  // En móvil priorizamos UX/performance: por defecto NO montamos videos para evitar descargas.
+  const [enableVideo, setEnableVideo] = useState(false);
+  const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
   const sectionRef = useRef<HTMLElement>(null);
+  const posterFor = (video: string) => video.replace("v.mp4", ".jpeg");
+
+  useEffect(() => {
+    // Habilitar videos sólo en desktop (lg+) y si no hay ahorro de datos / reduced motion.
+    const compute = () => {
+      try {
+        const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const saveData = (navigator as any).connection?.saveData === true;
+        const isDesktop = window.matchMedia?.("(min-width: 1024px)")?.matches ?? false;
+        setEnableVideo(isDesktop && !prefersReducedMotion && !saveData);
+      } catch {
+        setEnableVideo(false);
+      }
+    };
+
+    compute();
+
+    let mq: MediaQueryList | null = null;
+    try {
+      mq = window.matchMedia("(min-width: 1024px)");
+      const onChange = () => compute();
+      mq.addEventListener?.("change", onChange);
+      window.addEventListener("resize", onChange);
+      return () => {
+        mq?.removeEventListener?.("change", onChange);
+        window.removeEventListener("resize", onChange);
+      };
+    } catch {
+      return;
+    }
+  }, []);
+
   // Controlar reproducción de videos
   useEffect(() => {
-    videoRefs.current.forEach((video, idx) => {
-      if (video) {
-        if (idx === activeIndex) {
-          video.currentTime = 0;
-          video.play().catch(() => { });
-        } else {
-          video.pause();
-        }
+    if (!enableVideo) return;
+    Object.entries(videoRefs.current).forEach(([key, video]) => {
+      const idx = Number(key);
+      if (!video) return;
+      if (idx === activeIndex) {
+        video.currentTime = 0;
+        video.play().catch(() => { });
+      } else {
+        video.pause();
       }
     });
-  }, [activeIndex]);
+  }, [activeIndex, enableVideo]);
 
   return (
     <section
       ref={sectionRef}
-      className="relative h-screen bg-black overflow-hidden transition-all duration-1000 pt-20"
+      className="relative min-h-[100svh] lg:h-screen bg-black overflow-hidden transition-all duration-1000 pt-20"
     >
       {/* Línea dorada ultra-fina durante transiciones */}
       <div className={`absolute top-20 left-0 w-full h-[3px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent transition-all duration-1000 z-40 ${isTransitioning ? 'opacity-100 shadow-lg shadow-[#D4AF37]/50' : 'opacity-0'
@@ -103,33 +141,51 @@ export default function ExperienciasSection() {
           }`} />
       </div>
 
-      {/* Video Backgrounds con transiciones mejoradas */}
-      <div className="absolute inset-0 overflow-hidden">
-        {experiences.map((exp, idx) => (
-          <div
-            key={idx}
-            className={`absolute inset-0 transition-all duration-[4000ms] ease-out ${idx === activeIndex ? 'opacity-100' : 'opacity-0'
-              }`}
-          >
-            <video
-              ref={el => { videoRefs.current[idx] = el; }}
-              src={exp.video}
-              muted
-              loop
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover"
-            />
+      {/* Fondo: desktop con video / móvil con imagen (mejor UX en pantallas pequeñas) */}
+      {enableVideo ? (
+        <div className="absolute inset-0 overflow-hidden hidden lg:block">
+          {[...new Set([activeIndex, previousIndex].filter((v): v is number => v !== null))].map((idx) => {
+            const exp = experiences[idx];
+            return (
+              <div
+                key={idx}
+                className={`absolute inset-0 transition-all duration-[4000ms] ease-out ${idx === activeIndex ? 'opacity-100' : 'opacity-0'
+                  }`}
+              >
+                <video
+                  ref={(el) => { videoRefs.current[idx] = el; }}
+                  muted
+                  loop
+                  playsInline
+                  preload={idx === activeIndex ? "auto" : "metadata"}
+                  className="absolute inset-0 w-full h-full object-cover"
+                >
+                  <source src={exp.video} type="video/mp4" />
+                </video>
 
-            {/* Gradient Overlays mejorados */}
-            <div className={`absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent transition-all duration-[4000ms] ${isTransitioning ? 'from-black/95 via-black/60 to-black/20' : ''
-              }`} />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40" />
-          </div>
-        ))}
-      </div>
+                {/* Gradient Overlays mejorados */}
+                <div className={`absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent transition-all duration-[4000ms] ${isTransitioning ? 'from-black/95 via-black/60 to-black/20' : ''
+                  }`} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40" />
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="absolute inset-0 overflow-hidden lg:hidden">
+          <Image
+            src={posterFor(experiences[activeIndex].video)}
+            alt={`${experiences[activeIndex].title} background`}
+            fill
+            sizes="100vw"
+            className="object-cover opacity-35"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/30" />
+        </div>
+      )}
 
       {/* Overlay gradiente lateral derecho mejorado */}
-      <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-black/70 via-black/30 to-transparent pointer-events-none z-10 animate-fade-in-slow"></div>
+      <div className="hidden lg:block absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-black/70 via-black/30 to-transparent pointer-events-none z-10 animate-fade-in-slow"></div>
 
       {/* Línea decorativa dorada vertical */}
       <div className="hidden lg:block absolute right-8 top-[30%] bottom-[30%] w-[1px] bg-gradient-to-b from-transparent via-[#D4AF37]/30 to-transparent z-20 animate-fade-in-delay"></div>
@@ -148,8 +204,18 @@ export default function ExperienciasSection() {
           {experiences.map((exp, idx) => (
             <div
               key={idx}
-              onMouseEnter={() => !isTransitioning && setActiveIndex(idx)}
-              onClick={() => !isTransitioning && setActiveIndex(idx)}
+              onMouseEnter={() => {
+                if (isTransitioning) return;
+                if (idx === activeIndex) return;
+                setPreviousIndex(activeIndex);
+                setActiveIndex(idx);
+              }}
+              onClick={() => {
+                if (isTransitioning) return;
+                if (idx === activeIndex) return;
+                setPreviousIndex(activeIndex);
+                setActiveIndex(idx);
+              }}
               className={`text-right transition-all duration-700 cursor-pointer animate-slide-in-right ${idx === activeIndex
                 ? 'text-[#D4AF37] transform scale-105'
                 : 'text-white hover:text-gray-200'
@@ -193,16 +259,33 @@ export default function ExperienciasSection() {
         </div>
       </div>
 
-      {/* Selector móvil (evita solapamientos) */}
-      <div className="lg:hidden absolute bottom-6 left-0 right-0 z-40 px-4">
-        <div className="mx-auto max-w-[520px]">
-          <div className="flex gap-2 overflow-x-auto rounded-full border border-white/10 bg-black/45 backdrop-blur-md p-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Mobile: layout tipo "cards" (más natural que el modo escritorio) */}
+      <div className="lg:hidden relative z-20 px-4 pb-[max(20px,env(safe-area-inset-bottom))]">
+        <div className="mx-auto w-full max-w-[520px] pt-6">
+          <div className="text-center">
+            <p className="text-[#D4AF37] text-[10px] uppercase tracking-[0.35em] font-light">
+              Experiencias extraordinarias
+            </p>
+            <h2 className="mt-3 font-serif text-3xl font-thin text-white tracking-tight">
+              {experiences[activeIndex].title}<span className="text-[#D4AF37]">.</span>
+            </h2>
+            <p className="mt-2 text-white/80 text-sm font-light italic">
+              {experiences[activeIndex].subtitle}
+            </p>
+          </div>
+
+          {/* Tabs */}
+          <div className="mt-6 flex gap-2 overflow-x-auto rounded-full border border-white/10 bg-black/45 backdrop-blur-md p-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {experiences.map((exp, idx) => (
               <button
                 key={exp.title}
                 type="button"
-                onClick={() => setActiveIndex(idx)}
-                className={`whitespace-nowrap rounded-full px-4 py-2 text-[10px] uppercase tracking-[0.22em] transition-colors ${
+                onClick={() => {
+                  if (idx === activeIndex) return;
+                  setPreviousIndex(activeIndex);
+                  setActiveIndex(idx);
+                }}
+                className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-[10px] uppercase tracking-[0.22em] transition-colors ${
                   idx === activeIndex
                     ? 'bg-[#D4AF37] text-black'
                     : 'text-white/80 hover:text-white'
@@ -212,11 +295,56 @@ export default function ExperienciasSection() {
               </button>
             ))}
           </div>
+
+          {/* Card */}
+          <div className="mt-6 rounded-3xl border border-white/10 bg-black/35 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/40">
+            <div className="p-5">
+              <p className="text-white/85 text-sm leading-relaxed">
+                {experiences[activeIndex].description}
+              </p>
+
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-white/10 bg-black/30 p-3">
+                  <p className="text-white/50 text-[10px] uppercase tracking-[0.22em]">Categoría</p>
+                  <p className="mt-1 text-white text-sm font-light">{experiences[activeIndex].location}</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/30 p-3">
+                  <p className="text-white/50 text-[10px] uppercase tracking-[0.22em]">Duración</p>
+                  <p className="mt-1 text-white text-sm font-light">{experiences[activeIndex].duration}</p>
+                </div>
+              </div>
+
+              <details className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-4">
+                <summary className="cursor-pointer select-none text-[#D4AF37] text-xs uppercase tracking-[0.22em] font-medium">
+                  Experiencias exclusivas
+                </summary>
+                <div className="mt-3 space-y-2">
+                  {experiences[activeIndex].exclusives.map((exclusive) => (
+                    <div key={exclusive} className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-[#D4AF37]" />
+                      <span className="text-white/80 text-sm font-light">{exclusive}</span>
+                    </div>
+                  ))}
+                </div>
+              </details>
+
+              <div className="mt-6">
+                <Link
+                  href="/mantenimiento"
+                  className="w-full inline-flex items-center justify-center px-6 py-3 bg-[#D4AF37] text-black font-semibold rounded-full transition-[box-shadow,background-color,filter] duration-200 ease-out hover:bg-[#CDA233] hover:shadow-[0_14px_30px_rgba(0,0,0,0.28),0_0_0_1px_rgba(212,175,55,0.35),inset_0_1px_0_rgba(255,255,255,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                >
+                  <span className="text-xs uppercase tracking-[0.2em]">
+                    Iniciar conversación
+                  </span>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Content con animaciones de entrada - ajustado para no hacer scroll */}
-      <div className={`relative h-full flex items-center px-6 md:px-12 lg:px-16 z-20 transition-all duration-1000 overflow-hidden pb-28 sm:pb-32 lg:pb-0 ${isTransitioning ? 'translate-y-2 opacity-90' : 'translate-y-0 opacity-100'
+      <div className={`hidden lg:flex relative h-full items-center px-6 md:px-12 lg:px-16 z-20 transition-all duration-1000 overflow-hidden pb-0 ${isTransitioning ? 'translate-y-2 opacity-90' : 'translate-y-0 opacity-100'
         }`}>
         <div className="max-w-4xl w-full text-center lg:text-left">
 
@@ -224,7 +352,7 @@ export default function ExperienciasSection() {
           <div className="flex items-center justify-center lg:justify-start gap-3 mb-6 animate-fade-in">
             <div className="w-3 h-3 rounded-full bg-gradient-to-r from-[#D4AF37] to-yellow-500 animate-pulse" />
             <span className="text-[#D4AF37] text-sm font-light tracking-[0.3em] uppercase">
-              Servicios
+              Experiencias
             </span>
             <div className="w-24 h-[1px] bg-gradient-to-r from-[#D4AF37]/50 to-transparent" />
           </div>
