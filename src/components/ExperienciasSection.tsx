@@ -74,6 +74,16 @@ export default function ExperienciasSection() {
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const posterFor = (video: string) => video.replace("v.mp4", ".jpeg");
 
+  const getMobileNavLogo = (title: string) => {
+    // “Logo”/wordmark simple (sin iconos) para cada card.
+    return (
+      <span className="font-serif text-[11px] tracking-[0.28em] uppercase leading-none">
+        {title}
+        <span className="text-[#D4AF37]">.</span>
+      </span>
+    );
+  };
+
   useEffect(() => {
     // Habilitar videos sólo en desktop (lg+) y si no hay ahorro de datos / reduced motion.
     const compute = () => {
@@ -291,18 +301,41 @@ export default function ExperienciasSection() {
       {/* Mobile: carrusel (1 visible), sin sección larga */}
       <div className="lg:hidden relative z-20 px-4 pb-[max(16px,env(safe-area-inset-bottom))] h-[calc(100svh-5rem)] flex flex-col">
         <div className="mx-auto w-full max-w-[520px] pt-6 flex flex-col flex-1 min-h-0">
-          <div className="text-center">
-            <p className="text-[#D4AF37] text-[10px] uppercase tracking-[0.35em] font-light">
-              Experiencias
-            </p>
-            <p className="mt-2 text-white/70 text-sm font-light">
-              Desliza para ver más
-            </p>
+          {/* Navegación (móvil): “logos”/wordmarks por cada card (encima del carrusel) */}
+          <div className="mt-2">
+            <div className="grid grid-cols-4 gap-2">
+              {experiences.map((exp, idx) => (
+                <button
+                  key={exp.title}
+                  type="button"
+                  aria-label={`Ir a ${exp.title}`}
+                  title={exp.title}
+                  onClick={() => {
+                    const el = carouselRef.current;
+                    if (!el) return;
+                    const width = el.clientWidth || 0;
+                    el.scrollTo({ left: idx * width, behavior: "smooth" });
+                  }}
+                  className={`w-full px-2 py-2 rounded-xl border transition-all duration-300 ${
+                    idx === activeIndex
+                      ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-lg shadow-[#D4AF37]/20"
+                      : "bg-black/25 text-white/75 border-white/10 hover:border-white/20 hover:text-white"
+                  }`}
+                >
+                  <span className="flex items-center justify-center">
+                    <span className="font-serif text-[9px] tracking-[0.22em] uppercase leading-none">
+                      {exp.title}
+                      <span className="text-[#D4AF37]">.</span>
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div
             ref={carouselRef}
-            className="mt-6 flex-1 min-h-0 flex overflow-x-auto snap-x snap-mandatory pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="mt-5 flex-1 min-h-0 flex overflow-x-auto snap-x snap-mandatory pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {experiences.map((exp) => (
               <div
@@ -319,11 +352,6 @@ export default function ExperienciasSection() {
                         <p className="mt-2 text-white/80 text-sm font-light italic">
                           {exp.subtitle}
                         </p>
-                      </div>
-                      <div className="shrink-0 rounded-full border border-white/10 bg-black/25 px-3 py-1">
-                        <span className="text-[#D4AF37] text-[10px] uppercase tracking-[0.22em] font-medium">
-                          {exp.location}
-                        </span>
                       </div>
                     </div>
 
@@ -373,26 +401,6 @@ export default function ExperienciasSection() {
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* Dots */}
-          <div className="mt-4 flex items-center justify-center gap-2">
-            {experiences.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                aria-label={`Ir a ${experiences[idx].title}`}
-                onClick={() => {
-                  const el = carouselRef.current;
-                  if (!el) return;
-                  const width = el.clientWidth || 0;
-                  el.scrollTo({ left: idx * width, behavior: "smooth" });
-                }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  idx === activeIndex ? "w-6 bg-[#D4AF37]" : "w-2 bg-white/25"
-                }`}
-              />
             ))}
           </div>
 
