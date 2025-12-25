@@ -69,7 +69,7 @@ export default function HeroSection({ onExplore }: HeroSectionProps) {
 
   // Trigger animaciones después de un breve delay
   useEffect(() => {
-    const t = setTimeout(() => setIsLoaded(true), 500);
+    const t = setTimeout(() => setIsLoaded(true), 300);
     return () => clearTimeout(t);
   }, []);
 
@@ -228,11 +228,11 @@ export default function HeroSection({ onExplore }: HeroSectionProps) {
         .animate-scroll-down {
           animation: scroll-down 2s cubic-bezier(0.77, 0, 0.175, 1) infinite;
         }
-        .animate-fade-in-delay { animation: fade-in 1s ease-out 0.5s both; }
-        .animate-fade-in-delay-2 { animation: fade-in 1s ease-out 1s both; }
-        .animate-fade-in-delay-3 { animation: fade-in 1s ease-out 1.5s both; }
+        .animate-fade-in-delay { animation: fade-in 0.8s ease-out 0.3s both; }
+        .animate-fade-in-delay-2 { animation: fade-in 0.8s ease-out 0.6s both; }
+        .animate-fade-in-delay-3 { animation: fade-in 0.8s ease-out 0.9s both; }
         @keyframes fade-in {
-          from { opacity: 0; transform: translateY(20px); }
+          from { opacity: 0; transform: translateY(16px); }
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>

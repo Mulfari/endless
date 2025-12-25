@@ -316,11 +316,10 @@ export default function ExperienciasSection() {
                     const width = el.clientWidth || 0;
                     el.scrollTo({ left: idx * width, behavior: "smooth" });
                   }}
-                  className={`w-full px-2 py-2 rounded-xl border transition-all duration-300 ${
-                    idx === activeIndex
+                  className={`w-full px-2 py-2 rounded-xl border transition-all duration-300 ${idx === activeIndex
                       ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-lg shadow-[#D4AF37]/20"
                       : "bg-black/25 text-white/75 border-white/10 hover:border-white/20 hover:text-white"
-                  }`}
+                    }`}
                 >
                   <span className="flex items-center justify-center">
                     <span className="font-serif text-[9px] tracking-[0.22em] uppercase leading-none">
@@ -427,7 +426,7 @@ export default function ExperienciasSection() {
           <div className="flex items-center justify-center lg:justify-start gap-3 mb-6 animate-fade-in">
             <div className="w-3 h-3 rounded-full bg-gradient-to-r from-[#D4AF37] to-yellow-500 animate-pulse" />
             <span className="text-[#D4AF37] text-sm font-light tracking-[0.3em] uppercase">
-              Experiencias
+              Soluciones
             </span>
             <div className="w-24 h-[1px] bg-gradient-to-r from-[#D4AF37]/50 to-transparent" />
           </div>

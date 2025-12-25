@@ -35,6 +35,7 @@ export default function Home() {
   const [mobileGateOpen, setMobileGateOpen] = useState(false);
   const [mobileGateReveal, setMobileGateReveal] = useState(false);
   const [mobileGateTransitioning, setMobileGateTransitioning] = useState(false);
+  const [heroFadingOut, setHeroFadingOut] = useState(false);
 
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 1023px)");
@@ -45,17 +46,18 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // UX móvil: Hero como "gate". Hasta que el usuario toque "Explore World",
+    // UX: Hero como "gate" para móvil y desktop. Hasta que el usuario toque "Explore World",
     // NO renderizamos el resto de la página (no hay scroll posible).
-    setMobileGateOpen(!isMobile);
-    setMobileGateReveal(!isMobile);
-  }, [isMobile]);
+    // El gate siempre empieza cerrado.
+    setMobileGateOpen(false);
+    setMobileGateReveal(false);
+  }, []);
 
   useEffect(() => {
-    // UX móvil: bloquear scroll del body cuando:
+    // Bloquear scroll del body cuando:
     // - el menú hamburguesa está abierto, o
-    // - el gate está cerrado (para evitar "scroll bounce" en el Hero)
-    const lockForGate = isMobile && !mobileGateOpen && !mobileMenuOpen;
+    // - el gate está cerrado (para evitar scroll antes de "Explore World")
+    const lockForGate = !mobileGateOpen && !mobileMenuOpen;
     const shouldLock = mobileMenuOpen || lockForGate;
     if (!shouldLock) return;
 
@@ -70,6 +72,12 @@ export default function Home() {
       if (e.key === "Escape") setMobileMenuOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);
+
+    const onWheel = (e: WheelEvent) => {
+      // Bloquear wheel scroll cuando el gate está cerrado
+      if (lockForGate) e.preventDefault();
+    };
+    if (lockForGate) window.addEventListener("wheel", onWheel, { passive: false });
 
     const onTouchMove = (e: TouchEvent) => {
       // Bloquear gesto de scroll cuando el gate está cerrado
@@ -86,29 +94,28 @@ export default function Home() {
         document.documentElement.style.removeProperty("overscroll-behavior-y");
       }
       window.removeEventListener("keydown", onKeyDown);
-      if (lockForGate) window.removeEventListener("touchmove", onTouchMove);
+      if (lockForGate) {
+        window.removeEventListener("wheel", onWheel);
+        window.removeEventListener("touchmove", onTouchMove);
+      }
     };
-  }, [mobileMenuOpen, isMobile, mobileGateOpen]);
+  }, [mobileMenuOpen, mobileGateOpen]);
 
-  const openGateAndGoTo = (hash: "#servicios" | "#testimonios") => {
-    setMobileGateTransitioning(true);
+  const openGateAndGoTo = () => {
+    // Mostramos el contenido (invisible) encima del Hero
     setMobileGateOpen(true);
     setMobileGateReveal(false);
 
+    // En el siguiente frame, iniciamos el fade-in del contenido
     requestAnimationFrame(() => {
-      // Activar transición de entrada del contenido
-      setMobileGateReveal(true);
+      requestAnimationFrame(() => {
+        setMobileGateReveal(true);
 
-      const el = document.querySelector(hash);
-      if (el) {
-        const headerOffset = 80;
-        const rectTop = (el as HTMLElement).getBoundingClientRect().top;
-        const top = rectTop + window.scrollY - headerOffset;
-        window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
-      }
-
-      // Fade-out de overlay de transición
-      window.setTimeout(() => setMobileGateTransitioning(false), 450);
+        // Ocultar el Hero después de que el contenido esté visible
+        window.setTimeout(() => {
+          setHeroFadingOut(true);
+        }, 800);
+      });
     });
   };
 
@@ -119,7 +126,7 @@ export default function Home() {
 
     // Forzar scroll al top al cargar/recargar la página
     window.scrollTo(0, 0);
-    
+
     // También asegurarse de que el body esté en el top
     if (typeof window !== 'undefined') {
       document.documentElement.scrollTop = 0;
@@ -135,7 +142,7 @@ export default function Home() {
       // Detectar sección activa
       const sections = ['servicios', 'testimonios'];
       const headerOffset = 150;
-      
+
       for (let i = sections.length - 1; i >= 0; i--) {
         const section = document.getElementById(sections[i]);
         if (section) {
@@ -146,7 +153,7 @@ export default function Home() {
           }
         }
       }
-      
+
       // Si estamos en el top, no hay sección activa
       if (scrollY < 100) {
         setActiveSection('');
@@ -157,7 +164,7 @@ export default function Home() {
       const progress = windowHeight > 0 ? (scrollY / windowHeight) * 100 : 0;
       setScrollProgress(Math.min(progress, 100));
     };
-    
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll(); // Llamar una vez para inicializar
 
@@ -327,107 +334,54 @@ export default function Home() {
 
           {/* Logo premium */}
           <div className="flex-shrink-0">
-            <Link href="/" className="group relative inline-block" onClick={(e) => {
+            <Link href="/" className="group inline-block transition-transform duration-300 hover:scale-[1.01]" onClick={(e) => {
               if (window.location.pathname === '/') {
                 e.preventDefault();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
             }}>
-              <div className={`text-2xl md:text-3xl font-extrabold tracking-[-0.02em] transition-all duration-300 ${
-                isAtTop ? 'text-white' : 'text-black'
-              } group-hover:tracking-[-0.01em] group-hover:scale-[1.02]`}>
-                ENDLESS<span className="text-[#D4AF37] transition-colors duration-300 group-hover:text-yellow-400">.</span>
+              <div className={`text-2xl md:text-3xl font-extrabold tracking-[-0.02em] ${isAtTop ? 'text-white' : 'text-black'}`}>
+                <span className="transition-all duration-300 group-hover:drop-shadow-[0_0_4px_rgba(255,255,255,0.3)]">ENDLESS</span>
+                <span className="text-[#D4AF37] transition-all duration-300 group-hover:drop-shadow-[0_0_4px_rgba(212,175,55,0.5)]">.</span>
               </div>
-              {/* Subtle underline on hover */}
-              <div className={`absolute -bottom-1 left-0 h-[1px] w-0 transition-all duration-300 group-hover:w-full ${
-                isAtTop ? 'bg-white/50' : 'bg-[#D4AF37]/50'
-              }`} />
             </Link>
           </div>
 
           {/* Right side - Navigation & CTA */}
           <div className="flex items-center gap-6 md:gap-10">
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-8">
-              {[
-                { name: 'Servicios', href: '#servicios', scroll: true, id: 'servicios' },
-                { name: 'Testimonios', href: '#testimonios', scroll: true, id: 'testimonios' },
-                { name: 'Nuestra Visión', href: '/mantenimiento', scroll: false, id: '' }
-              ].map((item) => {
-                const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-                  if (item.scroll) {
-                    e.preventDefault();
-                    const element = document.querySelector(item.href);
-                    if (element) {
-                      const headerOffset = 80;
-                      const elementPosition = element.getBoundingClientRect().top;
-                      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                      window.scrollTo({
-                        top: offsetPosition,
-                        behavior: 'smooth'
-                      });
-                    }
-                  }
-                };
+            {/* Desktop Navigation - Button Only */}
+            <Link
+              href="/mantenimiento"
+              className={`hidden md:inline-flex items-center justify-center px-7 py-2.5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 relative group/cta overflow-hidden ${isAtTop
+                ? 'border border-white/40 text-white hover:border-white/60 backdrop-blur-sm bg-white/5'
+                : 'border border-gray-900 text-gray-900 hover:border-[#D4AF37]'
+                }`}
+            >
+              <span className={`absolute inset-0 transition-all duration-300 ${isAtTop
+                ? 'bg-white translate-y-full group-hover/cta:translate-y-0'
+                : 'bg-[#D4AF37] translate-y-full group-hover/cta:translate-y-0'
+                }`} />
+              <span className={`relative z-10 transition-colors duration-300 ${isAtTop
+                ? 'group-hover/cta:text-black'
+                : 'group-hover/cta:text-white'
+                }`}>
+                Contáctanos
+              </span>
+            </Link>
 
-                const isActive = item.id && activeSection === item.id;
-
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={handleClick}
-                    className={`relative text-[11px] uppercase tracking-[0.2em] font-semibold transition-all duration-300 group ${
-                      isAtTop
-                        ? 'text-white/70 hover:text-white'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    {item.name}
-                    {/* Animated underline */}
-                    <span className={`absolute -bottom-1 left-0 h-[2px] transition-all duration-300 ${
-                      isActive 
-                        ? 'w-full' 
-                        : 'w-0 group-hover:w-full'
-                    } ${isAtTop ? 'bg-white' : 'bg-[#D4AF37]'}`} />
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Subtle divider */}
+            {/* Restored Divider */}
             <div className={`hidden lg:block w-[1px] h-6 transition-colors duration-300 ${isAtTop ? 'bg-white/20' : 'bg-gray-300'}`} />
 
             {/* CTA Button & Mobile Toggle */}
             <div className="flex items-center gap-4 md:gap-6">
 
-              {/* CTA Button - Contáctanos */}
-              <Link
-                href="/mantenimiento"
-                className={`hidden md:inline-flex items-center justify-center px-7 py-2.5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 relative group/cta overflow-hidden ${
-                  isAtTop
-                    ? 'border border-white/40 text-white hover:border-white/60 backdrop-blur-sm bg-white/5'
-                    : 'border border-gray-900 text-gray-900 hover:border-[#D4AF37]'
-                }`}
-              >
-                <span className={`absolute inset-0 transition-all duration-300 ${
-                  isAtTop
-                    ? 'bg-white translate-y-full group-hover/cta:translate-y-0'
-                    : 'bg-[#D4AF37] translate-y-full group-hover/cta:translate-y-0'
-                }`} />
-                <span className={`relative z-10 transition-colors duration-300 ${
-                  isAtTop
-                    ? 'group-hover/cta:text-black'
-                    : 'group-hover/cta:text-white'
-                }`}>
-                  Contáctanos
-                </span>
-              </Link>
+              {/* CTA Button removed as it was moved to nav */}
+
 
               {/* Login Icon (Future Implementation) */}
               <Link
-                href="/mantenimiento"
+                href="/login"
                 className={`hidden md:flex items-center justify-center p-2 transition-all duration-300 group rounded-full ${isAtTop ? 'text-white/90 hover:text-white hover:bg-white/10' : 'text-gray-500 hover:text-[#D4AF37] hover:bg-gray-100'
                   }`}
                 aria-label="Iniciar Sesión"
@@ -459,10 +413,9 @@ export default function Home() {
         </nav>
 
         {/* Barra de progreso sutil para scroll */}
-        <div 
-          className={`absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-yellow-400 to-[#D4AF37] transition-all duration-300 ${
-            isAtTop ? 'opacity-0' : 'opacity-100'
-          }`}
+        <div
+          className={`absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-yellow-400 to-[#D4AF37] transition-all duration-300 ${isAtTop ? 'opacity-0' : 'opacity-100'
+            }`}
           style={{ width: `${scrollProgress}%` }}
         />
       </header>
@@ -470,9 +423,8 @@ export default function Home() {
       {/* Mobile Navigation Drawer (fuera del header para evitar bugs por transform/stacking) */}
       <div
         id="mobile-menu"
-        className={`lg:hidden fixed inset-0 z-[220] transition-opacity duration-300 ${
-          mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
-        }`}
+        className={`lg:hidden fixed inset-0 z-[220] transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+          }`}
         aria-hidden={!mobileMenuOpen}
       >
         {/* Backdrop */}
@@ -483,9 +435,8 @@ export default function Home() {
 
         {/* Drawer Panel */}
         <div
-          className={`absolute top-0 right-0 h-full w-[82vw] max-w-[360px] bg-white/95 backdrop-blur-xl border-l border-black/10 shadow-2xl transform transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
-            mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
+          className={`absolute top-0 right-0 h-full w-[82vw] max-w-[360px] bg-white/95 backdrop-blur-xl border-l border-black/10 shadow-2xl transform transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+            }`}
         >
           <div className="flex flex-col h-full px-6 pt-6 pb-8">
             {/* Drawer header */}
@@ -510,51 +461,9 @@ export default function Home() {
 
             <div className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-black/10 to-transparent" />
 
-            {/* Mobile Nav Links */}
+            {/* Mobile Nav Links - Simplified */}
             <div className="mt-6 flex flex-col">
-              {[
-                { name: 'Servicios', href: '#servicios', scroll: true },
-                { name: 'Testimonios', href: '#testimonios', scroll: true },
-                { name: 'Nuestra Visión', href: '/mantenimiento', scroll: false }
-              ].map((item, idx) => {
-                const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-                  if (item.scroll) {
-                    e.preventDefault();
-                    // En móvil, si el gate está cerrado y el usuario intenta navegar,
-                    // abrimos el gate primero.
-                    if (isMobile && !mobileGateOpen) {
-                      openGateAndGoTo(item.href as "#servicios" | "#testimonios");
-                      setMobileMenuOpen(false);
-                      return;
-                    }
-                    const element = document.querySelector(item.href);
-                    if (element) {
-                      const headerOffset = 80;
-                      const elementPosition = element.getBoundingClientRect().top;
-                      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-                    }
-                  }
-                  setMobileMenuOpen(false);
-                };
-
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={handleClick}
-                    className={`py-4 text-sm uppercase tracking-[0.24em] font-semibold text-gray-900 transition-all duration-500 transform border-b border-black/5 ${
-                      mobileMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-6 opacity-0'
-                    } hover:text-black`}
-                    style={{ transitionDelay: `${60 + idx * 80}ms` }}
-                  >
-                    <span className="inline-flex items-center justify-between w-full">
-                      <span>{item.name}</span>
-                      <span className="text-gray-300">—</span>
-                    </span>
-                  </Link>
-                );
-              })}
+              {/* No links here for now, actions are below */}
             </div>
 
             {/* Spacer */}
@@ -562,9 +471,8 @@ export default function Home() {
 
             {/* Mobile Actions */}
             <div
-              className={`mt-6 flex flex-col gap-3 transition-all duration-500 delay-200 ${
-                mobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
-              }`}
+              className={`mt-6 flex flex-col gap-3 transition-all duration-500 delay-200 ${mobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
+                }`}
             >
               <Link
                 href="/mantenimiento"
@@ -575,7 +483,7 @@ export default function Home() {
               </Link>
 
               <Link
-                href="/mantenimiento"
+                href="/login"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-center gap-3 text-gray-700 hover:text-black transition-colors duration-200 py-3 rounded-full border border-black/10 bg-black/[0.02] hover:bg-black/[0.04]"
               >
@@ -592,16 +500,14 @@ export default function Home() {
       {/* Intro Animation Overlay */}
       {(introStage === "showing" || introStage === "hiding") && (
         <div
-          className={`intro-overlay fixed inset-0 z-[200] bg-black flex items-center justify-center transition-opacity duration-1000 ease-in-out pointer-events-none ${
-            introStage === "hiding" ? "opacity-0" : (introVisible ? "opacity-100" : "opacity-0")
-          }`}
+          className={`intro-overlay fixed inset-0 z-[200] bg-black flex items-center justify-center transition-opacity duration-1000 ease-in-out pointer-events-none ${introStage === "hiding" ? "opacity-0" : (introVisible ? "opacity-100" : "opacity-0")
+            }`}
         >
           <div
-            className={`transition-all duration-1000 ease-out transform ${
-              introStage === "hiding"
-                ? "-translate-y-12 opacity-0 scale-95"
-                : (introVisible ? "translate-y-0 opacity-100 scale-100" : "translate-y-4 opacity-0 scale-[0.98]")
-            }`}
+            className={`transition-all duration-1000 ease-out transform ${introStage === "hiding"
+              ? "-translate-y-12 opacity-0 scale-95"
+              : (introVisible ? "translate-y-0 opacity-100 scale-100" : "translate-y-4 opacity-0 scale-[0.98]")
+              }`}
           >
             <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tighter">
               ENDLESS<span className="text-[#D4AF37]">.</span>
@@ -611,24 +517,22 @@ export default function Home() {
       )}
 
       <main className="relative">
-        <div ref={heroRef} id="hero" className="scroll-mt-24">
-          {(!isMobile || !mobileGateOpen) && (
+        {/* Hero Section - permanece visible hasta que heroFadingOut sea true */}
+        <div ref={heroRef} id="hero" className={`scroll-mt-24 ${mobileGateOpen ? 'absolute inset-0 z-0' : 'relative'}`}>
+          {!heroFadingOut && (
             <HeroSection
               onExplore={() => {
-                openGateAndGoTo("#servicios");
+                openGateAndGoTo();
               }}
             />
           )}
         </div>
-        {(!isMobile || mobileGateOpen) && (
+        {mobileGateOpen && (
           <div
-            className={`transition-all duration-500 ease-out ${
-              isMobile
-                ? mobileGateReveal
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
-                : ""
-            }`}
+            className={`relative z-10 bg-white transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] ${mobileGateReveal
+              ? "opacity-100"
+              : "opacity-0"
+              }`}
           >
             <div id="servicios">
               <div ref={serviciosRef} className="scroll-mt-24">
@@ -645,25 +549,18 @@ export default function Home() {
           Endless Group / "Lujo hecho a medida..."
         */}
         {/* <IntroSection /> */}
-        {(!isMobile || mobileGateOpen) && (
+        {mobileGateOpen && (
           <div
-            className={`transition-all duration-500 ease-out ${
-              isMobile
-                ? mobileGateReveal
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
-                : ""
-            }`}
+            className={`relative z-10 bg-white transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] delay-200 ${mobileGateReveal
+              ? "opacity-100"
+              : "opacity-0"
+              }`}
           >
             <Footer />
           </div>
         )}
       </main>
 
-      {/* Overlay de transición al abrir el gate (móvil) */}
-      {isMobile && mobileGateTransitioning && (
-        <div className="fixed inset-0 z-[210] bg-black transition-opacity duration-300 opacity-100 pointer-events-none" />
-      )}
     </div >
   );
 }
