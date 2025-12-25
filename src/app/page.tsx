@@ -350,10 +350,10 @@ export default function Home() {
           {/* Right side - Navigation & CTA */}
           <div className="flex items-center gap-6 md:gap-10">
 
-            {/* Desktop Navigation - Button Only */}
+            {/* Navigation - Button Only */}
             <Link
-              href="/mantenimiento"
-              className={`hidden md:inline-flex items-center justify-center px-7 py-2.5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 relative group/cta overflow-hidden ${isAtTop
+              href="/contacto"
+              className={`inline-flex items-center justify-center px-5 md:px-7 py-2 md:py-2.5 text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 relative group/cta overflow-hidden ${isAtTop
                 ? 'border border-white/40 text-white hover:border-white/60 backdrop-blur-sm bg-white/5'
                 : 'border border-gray-900 text-gray-900 hover:border-[#D4AF37]'
                 }`}
@@ -379,10 +379,10 @@ export default function Home() {
               {/* CTA Button removed as it was moved to nav */}
 
 
-              {/* Login Icon (Future Implementation) */}
+              {/* Login Icon */}
               <Link
                 href="/login"
-                className={`hidden md:flex items-center justify-center p-2 transition-all duration-300 group rounded-full ${isAtTop ? 'text-white/90 hover:text-white hover:bg-white/10' : 'text-gray-500 hover:text-[#D4AF37] hover:bg-gray-100'
+                className={`flex items-center justify-center p-2 transition-all duration-300 group rounded-full ${isAtTop ? 'text-white/90 hover:text-white hover:bg-white/10' : 'text-gray-500 hover:text-[#D4AF37] hover:bg-gray-100'
                   }`}
                 aria-label="Iniciar Sesión"
               >
@@ -391,23 +391,6 @@ export default function Home() {
                 </svg>
               </Link>
 
-              {/* Mobile menu button */}
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className={`lg:hidden relative z-[110] p-2 transition-colors duration-300 ${mobileMenuOpen
-                  ? 'text-black'
-                  : isAtTop ? 'text-white hover:text-[#D4AF37]' : 'text-black hover:text-[#D4AF37]'
-                  }`}
-                aria-label="Menú"
-                aria-expanded={mobileMenuOpen}
-                aria-controls="mobile-menu"
-              >
-                <div className="w-6 h-6 flex flex-col justify-center items-end gap-1.5">
-                  <span className={`block h-[2px] bg-current transition-all duration-500 ease-out ${mobileMenuOpen ? 'w-6 rotate-45 translate-y-2' : 'w-6'}`} />
-                  <span className={`block h-[2px] bg-current transition-all duration-500 ease-out ${mobileMenuOpen ? 'w-6 opacity-0' : 'w-5 group-hover:w-6'}`} />
-                  <span className={`block h-[2px] bg-current transition-all duration-500 ease-out ${mobileMenuOpen ? 'w-6 -rotate-45 -translate-y-2' : 'w-3 group-hover:w-6'}`} />
-                </div>
-              </button>
             </div>
           </div>
         </nav>
@@ -420,82 +403,7 @@ export default function Home() {
         />
       </header>
 
-      {/* Mobile Navigation Drawer (fuera del header para evitar bugs por transform/stacking) */}
-      <div
-        id="mobile-menu"
-        className={`lg:hidden fixed inset-0 z-[220] transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
-          }`}
-        aria-hidden={!mobileMenuOpen}
-      >
-        {/* Backdrop */}
-        <div
-          className="absolute inset-0 bg-black/40 backdrop-blur-md"
-          onClick={() => setMobileMenuOpen(false)}
-        />
 
-        {/* Drawer Panel */}
-        <div
-          className={`absolute top-0 right-0 h-full w-[82vw] max-w-[360px] bg-white/95 backdrop-blur-xl border-l border-black/10 shadow-2xl transform transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
-            }`}
-        >
-          <div className="flex flex-col h-full px-6 pt-6 pb-8">
-            {/* Drawer header */}
-            <div className="flex items-center justify-between">
-              <div className="select-none">
-                <div className="text-xl font-extrabold tracking-[-0.02em] text-black">
-                  ENDLESS<span className="text-[#D4AF37]">.</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(false)}
-                aria-label="Cerrar menú"
-                className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-black/5 hover:bg-black/10 text-gray-800 transition-colors duration-200"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-black/10 to-transparent" />
-
-            {/* Mobile Nav Links - Simplified */}
-            <div className="mt-6 flex flex-col">
-              {/* No links here for now, actions are below */}
-            </div>
-
-            {/* Spacer */}
-            <div className="flex-1" />
-
-            {/* Mobile Actions */}
-            <div
-              className={`mt-6 flex flex-col gap-3 transition-all duration-500 delay-200 ${mobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
-                }`}
-            >
-              <Link
-                href="/mantenimiento"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full py-3.5 rounded-full bg-[#D4AF37] text-black text-center text-xs font-bold uppercase tracking-[0.22em] transition-colors duration-200 hover:bg-[#CDA233]"
-              >
-                Contáctanos
-              </Link>
-
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-3 text-gray-700 hover:text-black transition-colors duration-200 py-3 rounded-full border border-black/10 bg-black/[0.02] hover:bg-black/[0.04]"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.2" stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span className="text-xs font-medium uppercase tracking-widest">Iniciar Sesión</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Intro Animation Overlay */}
       {(introStage === "showing" || introStage === "hiding") && (
