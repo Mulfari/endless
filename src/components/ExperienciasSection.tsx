@@ -55,6 +55,7 @@ const experiences: Experience[] = [
 export default function ExperienciasSection() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isDesktop, setIsDesktop] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
 
   useEffect(() => {
@@ -65,6 +66,26 @@ export default function ExperienciasSection() {
     window.addEventListener("resize", checkDesktop);
     return () => window.removeEventListener("resize", checkDesktop);
   }, []);
+
+  // Sync scroll position with activeIndex on mobile
+  useEffect(() => {
+    if (isDesktop || !scrollRef.current) return;
+
+    const handleScroll = () => {
+      const container = scrollRef.current;
+      if (!container) return;
+      const scrollPosition = container.scrollLeft;
+      const width = container.offsetWidth;
+      const newIndex = Math.round(scrollPosition / width);
+      if (newIndex !== activeIndex && newIndex >= 0 && newIndex < experiences.length) {
+        setActiveIndex(newIndex);
+      }
+    };
+
+    const container = scrollRef.current;
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [isDesktop, activeIndex]);
 
   // Handle Video Auto-Play for Active Panel
   useEffect(() => {
@@ -80,7 +101,15 @@ export default function ExperienciasSection() {
   }, [activeIndex]);
 
   return (
-    <section className="relative w-full h-[100svh] bg-black overflow-hidden flex flex-col lg:flex-row">
+    <section
+      ref={scrollRef}
+      className={`relative w-full h-[100svh] bg-black flex
+        ${isDesktop
+          ? "flex-row overflow-hidden"
+          : "flex-row overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+        }
+      `}
+    >
       {experiences.map((exp, idx) => {
         const isActive = activeIndex === idx;
 
@@ -90,11 +119,11 @@ export default function ExperienciasSection() {
             onMouseEnter={() => isDesktop && setActiveIndex(idx)}
             onClick={() => !isDesktop && setActiveIndex(idx)}
             className={`relative flex-shrink-0 transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] overflow-hidden cursor-pointer
-              ${isActive
-                ? "flex-[5] lg:flex-[3.5] grayscale-0"
-                : "flex-[1] lg:flex-[0.8] grayscale-[0.8] hover:grayscale-0"
+              ${isDesktop
+                ? (isActive ? "flex-[3.5] grayscale-0" : "flex-[0.8] grayscale-[0.8] hover:grayscale-0")
+                : "w-full snap-center grayscale-0"
               }
-              ${isDesktop ? "h-full border-r border-white/5 last:border-r-0" : "w-full border-b border-white/5 last:border-b-0"}
+              ${isDesktop ? "h-full border-r border-white/5 last:border-r-0" : "h-full"}
             `}
           >
             {/* Background Video/Image */}
@@ -114,7 +143,7 @@ export default function ExperienciasSection() {
             </div>
 
             {/* Content Container */}
-            <div className="relative z-20 h-full w-full p-6 lg:p-10 flex flex-col justify-end">
+            <div className="relative z-20 h-full w-full p-8 lg:p-10 flex flex-col justify-end">
 
               {/* Inactive Label (Desktop Vertical) */}
               <div
@@ -128,65 +157,77 @@ export default function ExperienciasSection() {
 
               {/* Active Content */}
               <div
-                className={`transition-all duration-700 flex flex-col justify-end h-full ${isActive
+                className={`transition-all duration-700 flex flex-col justify-end h-auto
+                  ${isActive
                     ? "opacity-100 translate-y-0 delay-100"
-                    : "opacity-0 translate-y-8 absolute bottom-0 left-0 w-full p-6 lg:p-10 pointer-events-none"
-                  }`}
+                    : (isDesktop ? "opacity-0 translate-y-8 pointer-events-none absolute bottom-0 left-0 w-full p-10" : "opacity-0 translate-y-4 pointer-events-none")
+                  }
+                `}
               >
-                {isActive && (
-                  <div className="max-w-xl animate-fade-in-up">
-                    {/* Number & Line */}
-                    <div className="flex items-center gap-4 mb-4">
-                      <span className="text-[#D4AF37] font-serif text-xl">{`0${idx + 1}`}</span>
-                      <div className="w-12 h-[1px] bg-[#D4AF37]/60" />
-                    </div>
-
-                    {/* Main Titles */}
-                    <h2 className="text-4xl lg:text-7xl font-thin text-white font-serif mb-2 tracking-tight">
-                      {exp.title}<span className="text-[#D4AF37]">.</span>
-                    </h2>
-                    <p className="text-lg lg:text-xl text-white/90 font-light italic mb-6">
-                      {exp.subtitle}
-                    </p>
-
-                    {/* Details (Only on Active) */}
-                    <p className="text-white/70 text-sm lg:text-base leading-relaxed mb-8 max-w-md hidden sm:block">
-                      {exp.description}
-                    </p>
-
-                    {/* Feature List (Compact) */}
-                    <div className="flex flex-wrap gap-x-6 gap-y-2 mb-8">
-                      {exp.exclusives.map((item, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
-                          <span className="text-xs lg:text-sm text-white/80 tracking-wide">{item}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* CTA */}
-                    <div>
-                      <Link
-                        href="/contacto"
-                        className="inline-flex items-center gap-3 group"
-                      >
-                        <span className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center group-hover:bg-[#D4AF37] group-hover:border-[#D4AF37] group-hover:text-black transition-all duration-300">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
-                          </svg>
-                        </span>
-                        <span className="text-xs uppercase tracking-[0.2em] text-white group-hover:text-[#D4AF37] transition-colors">
-                          Explorar
-                        </span>
-                      </Link>
-                    </div>
+                <div className="max-w-xl animate-fade-in-up">
+                  {/* Number & Line */}
+                  <div className="flex items-center gap-4 mb-3 lg:mb-4">
+                    <span className="text-[#D4AF37] font-serif text-lg lg:text-xl">{`0${idx + 1}`}</span>
+                    <div className="w-12 h-[1px] bg-[#D4AF37]/60" />
                   </div>
-                )}
+
+                  {/* Main Titles */}
+                  <h2 className="text-4xl lg:text-7xl font-thin text-white font-serif mb-2 tracking-tight">
+                    {exp.title}<span className="text-[#D4AF37]">.</span>
+                  </h2>
+                  <p className="text-lg lg:text-xl text-white/90 font-light italic mb-6">
+                    {exp.subtitle}
+                  </p>
+
+                  {/* Details (Responsive Visibility) */}
+                  <p className="text-white/70 text-sm lg:text-base leading-relaxed mb-8 max-w-md line-clamp-3 sm:line-clamp-none">
+                    {exp.description}
+                  </p>
+
+                  {/* Feature List (Compact) */}
+                  <div className="flex flex-wrap gap-x-6 gap-y-2 mb-8">
+                    {exp.exclusives.map((item, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
+                        <span className="text-xs lg:text-sm text-white/80 tracking-wide">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* CTA */}
+                  <div>
+                    <Link
+                      href="/contacto"
+                      className="inline-flex items-center gap-3 group"
+                    >
+                      <span className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center group-hover:bg-[#D4AF37] group-hover:border-[#D4AF37] group-hover:text-black transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                        </svg>
+                      </span>
+                      <span className="text-xs uppercase tracking-[0.2em] text-white group-hover:text-[#D4AF37] transition-colors">
+                        Explorar
+                      </span>
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         );
       })}
+
+      {/* Mobile Indication Progress */}
+      {!isDesktop && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+          {experiences.map((_, i) => (
+            <div
+              key={i}
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${activeIndex === i ? "bg-[#D4AF37] w-6" : "bg-white/30"}`}
+            />
+          ))}
+        </div>
+      )}
 
       <style jsx>{`
         .animate-fade-in-up {
@@ -195,6 +236,13 @@ export default function ExperienciasSection() {
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </section>
