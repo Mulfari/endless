@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+import { getText } from "@/lib/i18n";
 
 const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
@@ -16,8 +17,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Endless Group - Experiencias de Lujo",
-  description: "Descubre destinos exclusivos y experiencias de lujo con Endless Group. Travel, Lifestyle, Business y Capital en un solo lugar.",
+  title: getText("metadata.title", "Endless Group - Experiencias de Lujo"),
+  description: getText(
+    "metadata.description",
+    "Descubre destinos exclusivos y experiencias de lujo con Endless Group. Travel, Lifestyle, Business y Capital en un solo lugar."
+  ),
 };
 
 export default function RootLayout({

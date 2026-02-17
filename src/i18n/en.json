@@ -1,0 +1,298 @@
+{
+  "metadata": {
+    "title": "Endless Group - Curated Luxury Experiences",
+    "description": "Discover curated destinations and private luxury experiences with Endless Group. Travel, Lifestyle, Business, and Capital in one place."
+  },
+  "home": {
+    "header": {
+      "brand": "ENDLESS.",
+      "ctaContact": "Contact Us",
+      "loginAriaLabel": "Log In"
+    },
+    "introOverlay": {
+      "brand": "ENDLESS."
+    },
+    "hero": {
+      "eyebrow": "Curating the",
+      "title": "Extraordinary.",
+      "primaryCta": "Explore Experiences"
+    },
+    "experiencias": {
+      "items": [
+        {
+          "id": 0,
+          "title": "Travels",
+          "subtitle": "Journeys crafted with precision",
+          "description": "Bespoke itineraries and privileged access. We shape every journey into something truly extraordinary.",
+          "exclusives": [
+            "Tailor-made itinerary",
+            "Premium transport",
+            "Exclusive hotels"
+          ],
+          "cta": "Explore"
+        },
+        {
+          "id": 1,
+          "title": "Lifestyle",
+          "subtitle": "Luxury in everyday life",
+          "description": "Access to wellness, gastronomy, and entertainment, thoughtfully curated down to every detail.",
+          "exclusives": [
+            "Hard-to-get reservations",
+            "Private events",
+            "Wellness and spa"
+          ],
+          "cta": "Explore"
+        },
+        {
+          "id": 2,
+          "title": "Business",
+          "subtitle": "Strategy and network",
+          "description": "Strategic support for growth and opportunity. A global network that opens the right doors.",
+          "exclusives": [
+            "Networking",
+            "Partnerships",
+            "Executive management"
+          ],
+          "cta": "Explore"
+        },
+        {
+          "id": 3,
+          "title": "Capital",
+          "subtitle": "Long-term vision",
+          "description": "Planning and structure designed to move capital with confidence and long-term perspective.",
+          "exclusives": [
+            "Structure",
+            "Risk",
+            "Wealth vision"
+          ],
+          "cta": "Explore"
+        }
+      ],
+      "mobileProgressDots": true
+    },
+    "testimonios": {
+      "eyebrow": "Testimonials",
+      "titleLine1": "Extraordinary",
+      "titleLine2": "Experiences",
+      "description": "Discover why our clients choose Endless Travels for their most meaningful moments",
+      "stats": [
+        {
+          "value": "15",
+          "label": "Years of Excellence"
+        },
+        {
+          "value": "50+",
+          "label": "Exclusive Destinations"
+        },
+        {
+          "value": "500+",
+          "label": "Unique Experiences"
+        }
+      ],
+      "items": [
+        {
+          "id": 1,
+          "nombre": "Isabella Montenegro",
+          "ubicacion": "Milan, Italy",
+          "cargo": "CEO, Fashion House",
+          "texto": "Every detail was perfectly orchestrated. An experience that redefined my concept of luxury.",
+          "experiencia": "Santorini",
+          "rating": 5
+        },
+        {
+          "id": 2,
+          "nombre": "James Richardson",
+          "ubicacion": "London, United Kingdom",
+          "cargo": "Investment Director",
+          "texto": "The level of exclusivity is unmatched. The Maldives became our perfect private retreat.",
+          "experiencia": "Maldives",
+          "rating": 5
+        },
+        {
+          "id": 3,
+          "nombre": "Sophia Chen",
+          "ubicacion": "Hong Kong",
+          "cargo": "Art Collector",
+          "texto": "Private access to hidden temples. A cultural immersion that deeply moved me.",
+          "experiencia": "Kyoto",
+          "rating": 5
+        },
+        {
+          "id": 4,
+          "nombre": "Alexandre Dubois",
+          "ubicacion": "Paris, France",
+          "cargo": "Luxury Brand Director",
+          "texto": "Private heli-skiing and an exclusive chalet. Memories I will treasure forever in the mountains.",
+          "experiencia": "Aspen",
+          "rating": 5
+        },
+        {
+          "id": 5,
+          "nombre": "Amara Okafor",
+          "ubicacion": "Lagos, Nigeria",
+          "cargo": "Tech Entrepreneur",
+          "texto": "One-of-a-kind safaris and an exclusive lodge. Africa revealed its most authentic and untamed side.",
+          "experiencia": "Premium Safari",
+          "rating": 5
+        },
+        {
+          "id": 6,
+          "nombre": "David Kim",
+          "ubicacion": "Seoul, South Korea",
+          "cargo": "Film Producer",
+          "texto": "Every experience felt like a perfectly directed film. Unique moments captured for a lifetime.",
+          "experiencia": "Bali Exclusive",
+          "rating": 5
+        }
+      ]
+    },
+    "footer": {
+      "brand": "ENDLESS.",
+      "tagline": "Travel · Lifestyle · Business · Capital",
+      "description": "Redefining luxury through innovation, exclusivity, and deeply personalized service.",
+      "newsletter": {
+        "title": "Newsletter",
+        "description": "Receive exclusive access to launches and curated experiences.",
+        "emailLabel": "Email",
+        "emailPlaceholder": "Your email",
+        "submit": "Join",
+        "disclaimer": "We do not spam. You can unsubscribe anytime."
+      },
+      "copyrightTemplate": "© {year} Endless Group. All rights reserved.",
+      "legalLinks": {
+        "privacy": "Privacy",
+        "terms": "Terms",
+        "cookies": "Cookies"
+      }
+    }
+  },
+  "contactoPage": {
+    "brand": "ENDLESS.",
+    "title": "Let's Talk Excellence",
+    "description": "We design unforgettable experiences around you. Complete the form and our concierge team will assist you personally.",
+    "form": {
+      "fields": {
+        "name": {
+          "label": "Name",
+          "placeholder": "Your name"
+        },
+        "phone": {
+          "label": "Phone",
+          "placeholder": "+1 (555) 000-0000"
+        },
+        "email": {
+          "label": "Email",
+          "placeholder": "email@example.com"
+        },
+        "message": {
+          "label": "Message",
+          "placeholder": "How can we assist you?"
+        }
+      },
+      "submitDefault": "Send message",
+      "submitLoading": "Sending...",
+      "successAlert": "Thank you for contacting us. A concierge will be in touch shortly."
+    },
+    "backToHome": "Back to Home"
+  },
+  "loginPage": {
+    "brand": "ENDLESS.",
+    "eyebrow": "Client Area",
+    "form": {
+      "emailLabel": "Email / ID",
+      "emailPlaceholder": "Enter your credentials",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "forgotPassword": "Forgot your password?",
+      "submitDefault": "Log In",
+      "submitLoading": "Logging in...",
+      "demoAlert": "Demo login: implement authentication logic here."
+    },
+    "description": "Exclusive access for Endless Group members and clients. If you need assistance, please contact your assigned concierge.",
+    "backToHome": "Back to Home"
+  },
+  "mantenimientoPage": {
+    "brand": "ENDLESS.",
+    "title": "Under Maintenance",
+    "description": "This section is not available yet. We are refining details to deliver an impeccable experience.",
+    "backToHome": "Back to Home"
+  },
+  "optionalSectionsNotMounted": {
+    "introSection": {
+      "eyebrow": "Endless Group",
+      "title": "Tailor-made luxury.",
+      "description": "Exclusive experiences designed with precision, discretion, and intention.",
+      "pills": [
+        "Exclusivity",
+        "Personalization",
+        "24/7 Attention"
+      ]
+    },
+    "galeriaSection": {
+      "sectionTitle": "Endless Travels — Signature Services",
+      "services": [
+        {
+          "id": 1,
+          "title": "PRIVATE CHEF",
+          "subtitle": "Elite gastronomy at your table",
+          "description": "Michelin-star chefs craft private culinary experiences tailored to your tastes. From intimate dinners to spectacular banquets, each dish is a story of passion and precision.",
+          "features": [
+            "Michelin chef",
+            "Custom menus",
+            "Premium ingredients",
+            "24/7 service"
+          ]
+        },
+        {
+          "id": 2,
+          "title": "TRANSPORT",
+          "subtitle": "Travel with maximum comfort",
+          "description": "Private jets, luxury yachts, helicopters, and premium vehicles. Every transfer becomes part of the experience, designed for comfort and complete privacy.",
+          "features": [
+            "Private jet",
+            "Exclusive yacht",
+            "Helicopter",
+            "Premium limousines"
+          ]
+        },
+        {
+          "id": 3,
+          "title": "PERSONAL CONCIERGE",
+          "subtitle": "Your 24/7 luxury assistant",
+          "description": "A dedicated team that anticipates your needs. From impossible reservations to unforgettable moments, our concierge delivers what others cannot.",
+          "features": [
+            "Available 24/7",
+            "Exclusive reservations",
+            "Full management",
+            "Personalized care"
+          ]
+        },
+        {
+          "id": 4,
+          "title": "SPA & WELLNESS",
+          "subtitle": "Well-being in its purest form",
+          "description": "Specialized therapists bring a world-class spa to your location. Personalized treatments restore body and mind in complete privacy.",
+          "features": [
+            "Certified therapists",
+            "Personalized treatments",
+            "Premium products",
+            "Private sessions"
+          ]
+        },
+        {
+          "id": 5,
+          "title": "PRIVATE SECURITY",
+          "subtitle": "Discreet and professional protection",
+          "description": "Highly trained security teams ensure your peace of mind. Discreet protection that stays out of sight while safeguarding your well-being at all times.",
+          "features": [
+            "Trained personnel",
+            "Total discretion",
+            "Full coverage",
+            "Premium protocols"
+          ]
+        }
+      ],
+      "mobileLabel": "Services"
+    }
+  }
+}

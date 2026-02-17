@@ -2,8 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { getText, Locale } from "@/lib/i18n";
 
-export default function Footer() {
+type FooterProps = {
+  locale?: Locale;
+};
+
+export default function Footer({ locale }: FooterProps) {
   const [email, setEmail] = useState("");
   
   const handleSubscribe = (e: React.FormEvent) => {
@@ -25,17 +30,22 @@ export default function Footer() {
           <div className="md:col-span-1 lg:col-span-5">
             <Link href="/" className="group relative inline-block mb-4 md:mb-6">
               <div className="text-2xl md:text-3xl font-extrabold tracking-[-0.02em] text-white transition-all duration-300 group-hover:tracking-[-0.01em] group-hover:scale-[1.02]">
-                ENDLESS<span className="text-[#D4AF37] transition-colors duration-300 group-hover:text-yellow-400">.</span>
+                {getText("home.footer.brand", "ENDLESS.", locale).replace(".", "")}
+                <span className="text-[#D4AF37] transition-colors duration-300 group-hover:text-yellow-400">.</span>
               </div>
               <div className="absolute -bottom-1 left-0 h-[1px] w-0 transition-all duration-300 group-hover:w-full bg-white/30" />
             </Link>
 
             <div className="text-white/60 text-xs md:text-sm tracking-[0.18em] uppercase mb-6 md:mb-8">
-              Travel · Lifestyle · Business · Capital
+              {getText("home.footer.tagline", "Travel · Lifestyle · Business · Capital", locale)}
             </div>
 
             <p className="text-white/70 leading-relaxed text-sm md:text-base">
-              Redefiniendo el lujo con innovación, exclusividad y atención personalizada.
+              {getText(
+                "home.footer.description",
+                "Redefiniendo el lujo con innovación, exclusividad y atención personalizada.",
+                locale
+              )}
             </p>
           </div>
           
@@ -100,24 +110,28 @@ export default function Footer() {
               <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-sm p-6">
                 <div className="flex items-center gap-4 mb-3">
                   <h3 className="text-xs tracking-[0.25em] uppercase text-white/70">
-                    Newsletter
+                    {getText("home.footer.newsletter.title", "Newsletter", locale)}
                   </h3>
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                 </div>
 
                 <p className="text-white/65 mb-5 text-sm leading-relaxed">
-                  Recibe acceso exclusivo a lanzamientos y experiencias seleccionadas.
+                  {getText(
+                    "home.footer.newsletter.description",
+                    "Recibe acceso exclusivo a lanzamientos y experiencias seleccionadas.",
+                    locale
+                  )}
                 </p>
 
                 <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3">
                   <label htmlFor="footer-newsletter-email" className="sr-only">
-                    Email
+                    {getText("home.footer.newsletter.emailLabel", "Email", locale)}
                   </label>
                   <input
                     id="footer-newsletter-email"
                     type="email"
                     required
-                    placeholder="Tu email"
+                    placeholder={getText("home.footer.newsletter.emailPlaceholder", "Tu email", locale)}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="flex-1 px-4 py-3 bg-white/5 border border-white/15 rounded-full text-white placeholder-white/40 focus:outline-none focus:border-[#D4AF37]/60 transition-colors duration-200 text-sm"
@@ -126,12 +140,16 @@ export default function Footer() {
                     type="submit"
                     className="px-6 py-3 bg-[#D4AF37] text-black font-semibold rounded-full transition-colors duration-200 hover:bg-[#CDA233] text-sm"
                   >
-                    Suscribirme
+                    {getText("home.footer.newsletter.submit", "Suscribirme", locale)}
                   </button>
                 </form>
 
                 <p className="mt-4 text-white/40 text-xs leading-relaxed">
-                  No hacemos spam. Puedes darte de baja cuando quieras.
+                  {getText(
+                    "home.footer.newsletter.disclaimer",
+                    "No hacemos spam. Puedes darte de baja cuando quieras.",
+                    locale
+                  )}
                 </p>
               </div>
             </div>
@@ -149,11 +167,23 @@ export default function Footer() {
             
             {/* Copyright & Legal */}
             <div className="flex flex-col md:flex-row items-center gap-6 text-sm text-white/60">
-              <span>© {new Date().getFullYear()} Endless Group. Todos los derechos reservados.</span>
+              <span>
+                {getText(
+                  "home.footer.copyrightTemplate",
+                  "© {year} Endless Group. Todos los derechos reservados.",
+                  locale
+                ).replace("{year}", String(new Date().getFullYear()))}
+              </span>
               <div className="flex items-center gap-6">
-                <Link href="/mantenimiento" className="hover:text-[#D4AF37] transition-colors duration-200">Privacidad</Link>
-                <Link href="/mantenimiento" className="hover:text-[#D4AF37] transition-colors duration-200">Términos</Link>
-                <Link href="/mantenimiento" className="hover:text-[#D4AF37] transition-colors duration-200">Cookies</Link>
+                <Link href="/mantenimiento" className="hover:text-[#D4AF37] transition-colors duration-200">
+                  {getText("home.footer.legalLinks.privacy", "Privacidad", locale)}
+                </Link>
+                <Link href="/mantenimiento" className="hover:text-[#D4AF37] transition-colors duration-200">
+                  {getText("home.footer.legalLinks.terms", "Términos", locale)}
+                </Link>
+                <Link href="/mantenimiento" className="hover:text-[#D4AF37] transition-colors duration-200">
+                  {getText("home.footer.legalLinks.cookies", "Cookies", locale)}
+                </Link>
               </div>
             </div>
             

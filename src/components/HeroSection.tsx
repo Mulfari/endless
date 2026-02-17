@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { getText, Locale } from "@/lib/i18n";
 
 const heroMedia = [
   { video: "/herosection/1v.mp4", poster: "/herosection/1.jpeg" },
@@ -11,9 +12,10 @@ const heroMedia = [
 
 type HeroSectionProps = {
   onExplore?: () => void;
+  locale?: Locale;
 };
 
-export default function HeroSection({ onExplore }: HeroSectionProps) {
+export default function HeroSection({ onExplore, locale }: HeroSectionProps) {
   // Empezar con el segundo video (index 1) como primera impresión visual
   const [current, setCurrent] = useState(1);
   const [previous, setPrevious] = useState<number | null>(null);
@@ -169,10 +171,11 @@ export default function HeroSection({ onExplore }: HeroSectionProps) {
         {/* Título Principal Refinado */}
         <div className="flex flex-col items-center mb-12 md:mb-16 select-none px-4">
           <span className="text-white/80 text-[10px] md:text-base uppercase tracking-[0.3em] font-light mb-3 md:mb-4 animate-fade-in-delay text-center">
-            Curating the
+            {getText("home.hero.eyebrow", "Curating the", locale)}
           </span>
           <h1 className="font-serif italic text-5xl sm:text-7xl md:text-8xl lg:text-9xl text-white font-light tracking-tight leading-none animate-fade-in-delay-2 text-center">
-            Extraordinary<span className="text-[#D4AF37]">.</span>
+            {getText("home.hero.title", "Extraordinary.", locale).replace(".", "")}
+            <span className="text-[#D4AF37]">.</span>
           </h1>
         </div>
 
@@ -208,7 +211,7 @@ export default function HeroSection({ onExplore }: HeroSectionProps) {
 
             {/* Text */}
             <span className="relative z-10 text-xs font-bold uppercase tracking-[0.25em] text-white group-hover:text-[#D4AF37] transition-colors duration-500">
-              Explore World
+              {getText("home.hero.primaryCta", "Explore World", locale)}
             </span>
           </Link>
         </div>

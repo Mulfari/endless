@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
+import { getText, getValue, Locale } from "@/lib/i18n";
 
 interface Experience {
   id: number;
@@ -11,9 +12,10 @@ interface Experience {
   video: string;
   poster: string;
   exclusives: string[];
+  cta?: string;
 }
 
-const experiences: Experience[] = [
+const fallbackExperiences: Experience[] = [
   {
     id: 0,
     title: "Travels",
@@ -52,7 +54,23 @@ const experiences: Experience[] = [
   },
 ];
 
-export default function ExperienciasSection() {
+const experienceMediaById: Record<number, Pick<Experience, "video" | "poster">> = {
+  0: { video: "/herosection/1v.mp4", poster: "/herosection/1.jpeg" },
+  1: { video: "/herosection/2v.mp4", poster: "/herosection/2.jpeg" },
+  2: { video: "/herosection/3v.mp4", poster: "/herosection/3.jpeg" },
+  3: { video: "/herosection/1v.mp4", poster: "/herosection/1.jpeg" },
+};
+
+type ExperienciasSectionProps = {
+  locale?: Locale;
+};
+
+export default function ExperienciasSection({ locale }: ExperienciasSectionProps) {
+  const experiences = getValue<Experience[]>("home.experiencias.items", fallbackExperiences, locale).map((item) => ({
+    ...item,
+    ...experienceMediaById[item.id],
+  }));
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [isDesktop, setIsDesktop] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -206,7 +224,7 @@ export default function ExperienciasSection() {
                         </svg>
                       </span>
                       <span className="text-xs uppercase tracking-[0.2em] text-white group-hover:text-[#D4AF37] transition-colors">
-                        Explorar
+                        {exp.cta ?? getText("home.experiencias.items.0.cta", "Explorar", locale)}
                       </span>
                     </Link>
                   </div>

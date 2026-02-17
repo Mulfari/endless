@@ -8,8 +8,12 @@ import HeroSection from "../components/HeroSection";
 import ExperienciasSection from "../components/ExperienciasSection";
 import TestimoniosSection from "../components/TestimoniosSection";
 import Footer from "../components/Footer";
+import LanguageSwitcher from "../components/LanguageSwitcher";
+import { getText, Locale, resolveLocale } from "@/lib/i18n";
 
 export default function Home() {
+  const GATE_REVEAL_DELAY_MS = 120;
+  const GATE_TRANSITION_MS = 1100;
   const heroRef = useRef<HTMLDivElement>(null);
   const serviciosRef = useRef<HTMLDivElement>(null);
   const isSnappingRef = useRef(false);
@@ -17,6 +21,7 @@ export default function Home() {
   const unlockRafRef = useRef<number | null>(null);
   const heroRatioRef = useRef(0);
   const serviciosRatioRef = useRef(0);
+  const gateTimersRef = useRef<number[]>([]);
 
   const [isAtTop, setIsAtTop] = useState(true);
   // Intro/Loader: por defecto NO se muestra en SSR para evitar "flash" en cargas rápidas.
@@ -25,7 +30,6 @@ export default function Home() {
   const [introVisible, setIntroVisible] = useState(false); // para fade-in suave (evita “pop”)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('');
-  const [scrollProgress, setScrollProgress] = useState(0);
   // const pathname = usePathname();
 
   const [isMobile, setIsMobile] = useState(false);
@@ -36,6 +40,12 @@ export default function Home() {
   const [mobileGateReveal, setMobileGateReveal] = useState(false);
   const [mobileGateTransitioning, setMobileGateTransitioning] = useState(false);
   const [heroFadingOut, setHeroFadingOut] = useState(false);
+  const [gateVeilVisible, setGateVeilVisible] = useState(false);
+  const [locale, setLocale] = useState<Locale>("es");
+
+  useEffect(() => {
+    setLocale(resolveLocale());
+  }, []);
 
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 1023px)");
@@ -57,7 +67,7 @@ export default function Home() {
     // Bloquear scroll del body cuando:
     // - el menú hamburguesa está abierto, o
     // - el gate está cerrado (para evitar scroll antes de "Explore World")
-    const lockForGate = !mobileGateOpen && !mobileMenuOpen;
+    const lockForGate = (!mobileGateOpen || mobileGateTransitioning) && !mobileMenuOpen;
     const shouldLock = mobileMenuOpen || lockForGate;
     if (!shouldLock) return;
 
@@ -99,24 +109,34 @@ export default function Home() {
         window.removeEventListener("touchmove", onTouchMove);
       }
     };
-  }, [mobileMenuOpen, mobileGateOpen]);
+  }, [mobileMenuOpen, mobileGateOpen, mobileGateTransitioning]);
 
   const openGateAndGoTo = () => {
+    // Limpiar timers previos por seguridad (doble click, etc.)
+    gateTimersRef.current.forEach((id) => window.clearTimeout(id));
+    gateTimersRef.current = [];
+
     // Mostramos el contenido (invisible) encima del Hero
     setMobileGateOpen(true);
     setMobileGateReveal(false);
+    setMobileGateTransitioning(true);
+    setGateVeilVisible(true);
 
-    // En el siguiente frame, iniciamos el fade-in del contenido
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setMobileGateReveal(true);
+    // Pequeño delay para que el click se sienta deliberado y más premium.
+    gateTimersRef.current.push(window.setTimeout(() => {
+      setMobileGateReveal(true);
+    }, GATE_REVEAL_DELAY_MS));
 
-        // Ocultar el Hero después de que el contenido esté visible
-        window.setTimeout(() => {
-          setHeroFadingOut(true);
-        }, 800);
-      });
-    });
+    // Hero sale antes de terminar la transición para evitar “cortes”
+    gateTimersRef.current.push(window.setTimeout(() => {
+      setHeroFadingOut(true);
+    }, Math.floor(GATE_TRANSITION_MS * 0.55)));
+
+    // Cerrar velo y finalizar transición
+    gateTimersRef.current.push(window.setTimeout(() => {
+      setGateVeilVisible(false);
+      setMobileGateTransitioning(false);
+    }, GATE_TRANSITION_MS));
   };
 
   useEffect(() => {
@@ -159,10 +179,6 @@ export default function Home() {
         setActiveSection('');
       }
 
-      // Calcular progreso de scroll
-      const windowHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = windowHeight > 0 ? (scrollY / windowHeight) * 100 : 0;
-      setScrollProgress(Math.min(progress, 100));
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -312,6 +328,8 @@ export default function Home() {
     }
 
     return () => {
+      gateTimersRef.current.forEach((id) => window.clearTimeout(id));
+      gateTimersRef.current = [];
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener("wheel", onWheel);
       io.disconnect();
@@ -341,7 +359,9 @@ export default function Home() {
               }
             }}>
               <div className={`text-2xl md:text-3xl font-extrabold tracking-[-0.02em] ${isAtTop ? 'text-white' : 'text-black'}`}>
-                <span className="transition-all duration-300 group-hover:drop-shadow-[0_0_4px_rgba(255,255,255,0.3)]">ENDLESS</span>
+                <span className="transition-all duration-300 group-hover:drop-shadow-[0_0_4px_rgba(255,255,255,0.3)]">
+                  {getText("home.header.brand", "ENDLESS.", locale).replace(".", "")}
+                </span>
                 <span className="text-[#D4AF37] transition-all duration-300 group-hover:drop-shadow-[0_0_4px_rgba(212,175,55,0.5)]">.</span>
               </div>
             </Link>
@@ -366,7 +386,7 @@ export default function Home() {
                 ? 'group-hover/cta:text-black'
                 : 'group-hover/cta:text-white'
                 }`}>
-                Contáctanos
+                {getText("home.header.ctaContact", "Contáctanos", locale)}
               </span>
             </Link>
 
@@ -375,6 +395,11 @@ export default function Home() {
 
             {/* CTA Button & Mobile Toggle */}
             <div className="flex items-center gap-4 md:gap-6">
+              <LanguageSwitcher
+                locale={locale}
+                onChange={setLocale}
+                variant={isAtTop ? "dark" : "light"}
+              />
 
               {/* CTA Button removed as it was moved to nav */}
 
@@ -384,7 +409,7 @@ export default function Home() {
                 href="/login"
                 className={`flex items-center justify-center p-2 transition-all duration-300 group rounded-full ${isAtTop ? 'text-white/90 hover:text-white hover:bg-white/10' : 'text-gray-500 hover:text-[#D4AF37] hover:bg-gray-100'
                   }`}
-                aria-label="Iniciar Sesión"
+                aria-label={getText("home.header.loginAriaLabel", "Iniciar Sesión", locale)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 transition-transform duration-300 group-hover:scale-110">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -395,12 +420,6 @@ export default function Home() {
           </div>
         </nav>
 
-        {/* Barra de progreso sutil para scroll */}
-        <div
-          className={`absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-[#D4AF37] via-yellow-400 to-[#D4AF37] transition-all duration-300 ${isAtTop ? 'opacity-0' : 'opacity-100'
-            }`}
-          style={{ width: `${scrollProgress}%` }}
-        />
       </header>
 
 
@@ -418,55 +437,79 @@ export default function Home() {
               }`}
           >
             <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tighter">
-              ENDLESS<span className="text-[#D4AF37]">.</span>
+              {getText("home.introOverlay.brand", "ENDLESS.", locale).replace(".", "")}
+              <span className="text-[#D4AF37]">.</span>
             </h1>
           </div>
         </div>
       )}
 
+      {/* Velo de transición Hero -> Secciones */}
+      {mobileGateOpen && (
+        <div
+          className={`fixed inset-0 z-[90] pointer-events-none transition-opacity duration-700 ease-out ${
+            gateVeilVisible ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-transparent" />
+        </div>
+      )}
+
       <main className="relative">
         {/* Hero Section - permanece visible hasta que heroFadingOut sea true */}
-        <div ref={heroRef} id="hero" className={`scroll-mt-24 ${mobileGateOpen ? 'absolute inset-0 z-0' : 'relative'}`}>
+        <div
+          ref={heroRef}
+          id="hero"
+          className={`scroll-mt-24 transition-opacity duration-[900ms] ease-out ${
+            mobileGateOpen ? "absolute inset-0 z-0" : "relative"
+          } ${
+            mobileGateOpen && mobileGateReveal
+              ? "opacity-0"
+              : "opacity-100"
+          }`}
+        >
           {!heroFadingOut && (
             <HeroSection
+              locale={locale}
               onExplore={() => {
                 openGateAndGoTo();
               }}
             />
           )}
         </div>
-        {mobileGateOpen && (
-          <div
-            className={`relative z-10 bg-white transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] ${mobileGateReveal
-              ? "opacity-100"
-              : "opacity-0"
-              }`}
-          >
-            <div id="servicios">
-              <div ref={serviciosRef} className="scroll-mt-24">
-                <ExperienciasSection />
-              </div>
-            </div>
-            <div id="testimonios">
-              <TestimoniosSection />
+        <div
+          className={`relative z-10 transition-all duration-[1050ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            mobileGateOpen && mobileGateReveal
+              ? "opacity-100 translate-y-0 pointer-events-auto"
+              : "opacity-0 translate-y-6 pointer-events-none"
+          }`}
+          aria-hidden={!mobileGateOpen}
+        >
+          <div id="servicios">
+            <div ref={serviciosRef} className="scroll-mt-24">
+              <ExperienciasSection locale={locale} />
             </div>
           </div>
-        )}
+          <div id="testimonios">
+            <TestimoniosSection locale={locale} />
+          </div>
+        </div>
         {/*
           Sección intermedia (oculta por ahora):
           Endless Group / "Lujo hecho a medida..."
         */}
         {/* <IntroSection /> */}
-        {mobileGateOpen && (
-          <div
-            className={`relative z-10 bg-white transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] delay-200 ${mobileGateReveal
-              ? "opacity-100"
-              : "opacity-0"
-              }`}
-          >
-            <Footer />
-          </div>
-        )}
+        <div
+          className={`relative z-10 transition-all duration-[1050ms] ease-[cubic-bezier(0.22,1,0.36,1)] delay-150 ${
+            mobileGateOpen && mobileGateReveal
+              ? "opacity-100 translate-y-0 pointer-events-auto"
+              : "opacity-0 translate-y-5 pointer-events-none"
+          }`}
+          aria-hidden={!mobileGateOpen}
+        >
+          <Footer locale={locale} />
+        </div>
       </main>
 
     </div >

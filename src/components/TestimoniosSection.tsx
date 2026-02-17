@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { getText, getValue, Locale } from "@/lib/i18n";
 
 interface Testimonio {
   id: number;
@@ -79,7 +80,37 @@ const testimonios: Testimonio[] = [
   }
 ];
 
-export default function TestimoniosSection() {
+const fallbackTestimonios = testimonios;
+
+const imageByTestimonioId: Record<number, string> = {
+  1: "/herosection/1.jpeg",
+  2: "/herosection/2.jpeg",
+  3: "/herosection/3.jpeg",
+  4: "/herosection/4.jpeg",
+  5: "/herosection/5.jpeg",
+  6: "/herosection/6.jpeg",
+};
+
+type TestimoniosSectionProps = {
+  locale?: Locale;
+};
+
+export default function TestimoniosSection({ locale }: TestimoniosSectionProps) {
+  const testimoniosI18n = getValue<Testimonio[]>("home.testimonios.items", fallbackTestimonios, locale).map((item) => ({
+    ...item,
+    imagen: imageByTestimonioId[item.id] ?? item.imagen,
+  }));
+
+  const stats = getValue<{ value: string; label: string }[]>(
+    "home.testimonios.stats",
+    [
+      { value: "15", label: "Años de Excelencia" },
+      { value: "50+", label: "Destinos Exclusivos" },
+      { value: "500+", label: "Experiencias Únicas" },
+    ],
+    locale
+  );
+
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [activeMobileIndex, setActiveMobileIndex] = useState(0);
   const carouselRef = useRef<HTMLDivElement | null>(null);
@@ -110,7 +141,7 @@ export default function TestimoniosSection() {
         raf = 0;
         const width = el.clientWidth || 1;
         const idx = Math.round(el.scrollLeft / width);
-        if (idx !== activeMobileIndex && idx >= 0 && idx < testimonios.length) {
+        if (idx !== activeMobileIndex && idx >= 0 && idx < testimoniosI18n.length) {
           setActiveMobileIndex(idx);
         }
       });
@@ -139,18 +170,24 @@ export default function TestimoniosSection() {
           <div className="inline-flex items-center gap-3 mb-6">
             <div className="w-1 h-1 rounded-full bg-[#D4AF37]"></div>
             <span className="text-gray-600 text-sm font-light tracking-[0.2em] uppercase">
-              Testimonios
+              {getText("home.testimonios.eyebrow", "Testimonios", locale)}
             </span>
             <div className="w-1 h-1 rounded-full bg-[#D4AF37]"></div>
           </div>
           
           <h2 className="text-4xl md:text-6xl font-extralight text-gray-900 tracking-tight mb-4">
-            Experiencias
-            <span className="block text-[#D4AF37] font-light">Extraordinarias</span>
+            {getText("home.testimonios.titleLine1", "Experiencias", locale)}
+            <span className="block text-[#D4AF37] font-light">
+              {getText("home.testimonios.titleLine2", "Extraordinarias", locale)}
+            </span>
           </h2>
           
           <p className="text-gray-600 text-lg font-light max-w-2xl mx-auto leading-relaxed">
-            Descubre por qué nuestros viajeros eligen Endless Travels para sus momentos más especiales
+            {getText(
+              "home.testimonios.description",
+              "Descubre por qué nuestros viajeros eligen Endless Travels para sus momentos más especiales",
+              locale
+            )}
           </p>
         </div>
 
@@ -160,7 +197,7 @@ export default function TestimoniosSection() {
             ref={carouselRef}
             className="flex overflow-x-auto snap-x snap-mandatory pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {testimonios.map((t) => (
+            {testimoniosI18n.map((t) => (
               <div key={t.id} className="snap-center shrink-0 w-full">
                 <div className="relative h-[420px] rounded-3xl overflow-hidden shadow-xl border border-gray-100 bg-white">
                   {/* Imagen de fondo (cinemático) */}
@@ -224,7 +261,7 @@ export default function TestimoniosSection() {
           <div className="mt-5 flex items-center justify-between gap-3">
             {/* Flechas */}
             <div className="flex-1 flex items-center justify-center gap-2">
-              {testimonios.map((t, idx) => (
+              {testimoniosI18n.map((t, idx) => (
                 <button
                   key={t.id}
                   type="button"
@@ -245,9 +282,9 @@ export default function TestimoniosSection() {
           {/* Testimonio destacado - más grande */}
           <div 
             className={`lg:col-span-2 lg:row-span-2 group cursor-pointer transform transition-all duration-700 hover:scale-[1.02] ${
-              hoveredCard === testimonios[0].id ? 'z-20' : 'z-10'
+              hoveredCard === testimoniosI18n[0].id ? 'z-20' : 'z-10'
             }`}
-            onMouseEnter={() => setHoveredCard(testimonios[0].id)}
+            onMouseEnter={() => setHoveredCard(testimoniosI18n[0].id)}
             onMouseLeave={() => setHoveredCard(null)}
           >
             <div className="relative h-[500px] bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100">
@@ -255,8 +292,8 @@ export default function TestimoniosSection() {
               {/* Imagen de fondo */}
               <div className="absolute inset-0">
                 <Image
-                  src={testimonios[0].imagen}
-                  alt={testimonios[0].experiencia}
+                  src={testimoniosI18n[0].imagen}
+                  alt={testimoniosI18n[0].experiencia}
                   fill
                   sizes="(max-width: 1024px) 100vw, 1200px"
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -272,7 +309,7 @@ export default function TestimoniosSection() {
                   {/* Badge del destino */}
                   <div className="inline-block mb-4">
                     <span className="bg-[#D4AF37]/90 text-black text-xs font-medium px-3 py-1 rounded-full tracking-wide">
-                      {testimonios[0].experiencia}
+                      {testimoniosI18n[0].experiencia}
                     </span>
                   </div>
 
@@ -289,20 +326,20 @@ export default function TestimoniosSection() {
 
                   {/* Texto */}
                   <blockquote className="text-white text-xl font-light leading-relaxed mb-6 italic">
-                    &ldquo;{testimonios[0].texto}&rdquo;
+                    &ldquo;{testimoniosI18n[0].texto}&rdquo;
                   </blockquote>
 
                   {/* Cliente info */}
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                       <span className="text-white text-lg font-light">
-                        {testimonios[0].nombre.charAt(0)}
+                        {testimoniosI18n[0].nombre.charAt(0)}
                       </span>
                     </div>
                     <div>
-                      <h4 className="text-white font-medium">{testimonios[0].nombre}</h4>
-                      <p className="text-white/80 text-sm">{testimonios[0].cargo}</p>
-                      <p className="text-white/60 text-xs">{testimonios[0].ubicacion}</p>
+                      <h4 className="text-white font-medium">{testimoniosI18n[0].nombre}</h4>
+                      <p className="text-white/80 text-sm">{testimoniosI18n[0].cargo}</p>
+                      <p className="text-white/60 text-xs">{testimoniosI18n[0].ubicacion}</p>
                     </div>
                   </div>
                 </div>
@@ -311,7 +348,7 @@ export default function TestimoniosSection() {
           </div>
 
           {/* Testimonios regulares */}
-          {testimonios.slice(1).map((testimonio, index) => (
+          {testimoniosI18n.slice(1).map((testimonio, index) => (
             <div
               key={testimonio.id}
               className={`group cursor-pointer transform transition-all duration-500 hover:scale-105 ${
@@ -378,18 +415,14 @@ export default function TestimoniosSection() {
         {/* Stats minimalistas */}
         <div className="mt-24 pt-16 border-t border-gray-200">
           <div className="grid grid-cols-3 gap-12 max-w-3xl mx-auto text-center">
-            <div className="group">
-              <div className="text-4xl font-extralight text-[#D4AF37] mb-2 transition-all duration-300 group-hover:scale-110">15</div>
-              <p className="text-gray-600 font-light text-sm tracking-wide">Años de Excelencia</p>
-            </div>
-            <div className="group">
-              <div className="text-4xl font-extralight text-[#D4AF37] mb-2 transition-all duration-300 group-hover:scale-110">50+</div>
-              <p className="text-gray-600 font-light text-sm tracking-wide">Destinos Exclusivos</p>
-            </div>
-            <div className="group">
-              <div className="text-4xl font-extralight text-[#D4AF37] mb-2 transition-all duration-300 group-hover:scale-110">500+</div>
-              <p className="text-gray-600 font-light text-sm tracking-wide">Experiencias Únicas</p>
-            </div>
+            {stats.map((item) => (
+              <div key={`${item.value}-${item.label}`} className="group">
+                <div className="text-4xl font-extralight text-[#D4AF37] mb-2 transition-all duration-300 group-hover:scale-110">
+                  {item.value}
+                </div>
+                <p className="text-gray-600 font-light text-sm tracking-wide">{item.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
