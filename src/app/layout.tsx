@@ -16,12 +16,39 @@ const inter = Inter({
   display: "swap",
 });
 
+// Dominio canónico para OG/canonical. Ajustar con NEXT_PUBLIC_SITE_URL en Vercel.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://endless-group.vercel.app";
+const OG_TITLE = getText("metadata.title", "Endless Group - Experiencias de Lujo");
+const OG_DESCRIPTION = getText(
+  "metadata.description",
+  "Descubre destinos exclusivos y experiencias de lujo con Endless Group. Travel, Lifestyle, Business y Capital en un solo lugar."
+);
+
 export const metadata: Metadata = {
-  title: getText("metadata.title", "Endless Group - Experiencias de Lujo"),
-  description: getText(
-    "metadata.description",
-    "Descubre destinos exclusivos y experiencias de lujo con Endless Group. Travel, Lifestyle, Business y Capital en un solo lugar."
-  ),
+  metadataBase: new URL(SITE_URL),
+  title: OG_TITLE,
+  description: OG_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: "Endless Group",
+    title: OG_TITLE,
+    description: OG_DESCRIPTION,
+    locale: "es_ES",
+    images: [
+      {
+        url: "/herosection/2.jpeg",
+        width: 1200,
+        height: 630,
+        alt: "Endless Group",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: OG_TITLE,
+    description: OG_DESCRIPTION,
+    images: ["/herosection/2.jpeg"],
+  },
 };
 
 export default function RootLayout({

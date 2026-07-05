@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 // import { usePathname } from "next/navigation";
 import HeroSection from "../components/HeroSection";
-// import IntroSection from "../components/IntroSection";
 import ExperienciasSection from "../components/ExperienciasSection";
-import TestimoniosSection from "../components/TestimoniosSection";
+import ConfianzaSection from "../components/ConfianzaSection";
+import ClosingCta from "../components/ClosingCta";
 import Footer from "../components/Footer";
+import WhatsAppFab from "../components/WhatsAppFab";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { getText, Locale, resolveLocale } from "@/lib/i18n";
+import { whatsappLink } from "@/lib/whatsapp";
 
 export default function Home() {
   const GATE_REVEAL_DELAY_MS = 120;
@@ -160,7 +162,7 @@ export default function Home() {
       setIsAtTop(isTop);
 
       // Detectar sección activa
-      const sections = ['servicios', 'testimonios'];
+      const sections = ['servicios', 'confianza'];
       const headerOffset = 150;
 
       for (let i = sections.length - 1; i >= 0; i--) {
@@ -371,8 +373,10 @@ export default function Home() {
           <div className="flex items-center gap-6 md:gap-10">
 
             {/* Navigation - Button Only */}
-            <Link
-              href="/contacto"
+            <a
+              href={whatsappLink("general", locale)}
+              target="_blank"
+              rel="noopener noreferrer"
               className={`inline-flex items-center justify-center px-5 md:px-7 py-2 md:py-2.5 text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 relative group/cta overflow-hidden ${isAtTop
                 ? 'border border-white/40 text-white hover:border-white/60 backdrop-blur-sm bg-white/5'
                 : 'border border-gray-900 text-gray-900 hover:border-[#D4AF37]'
@@ -388,7 +392,7 @@ export default function Home() {
                 }`}>
                 {getText("home.header.ctaContact", "Contáctanos", locale)}
               </span>
-            </Link>
+            </a>
 
             {/* Restored Divider */}
             <div className={`hidden lg:block w-[1px] h-6 transition-colors duration-300 ${isAtTop ? 'bg-white/20' : 'bg-gray-300'}`} />
@@ -400,21 +404,6 @@ export default function Home() {
                 onChange={setLocale}
                 variant={isAtTop ? "dark" : "light"}
               />
-
-              {/* CTA Button removed as it was moved to nav */}
-
-
-              {/* Login Icon */}
-              <Link
-                href="/login"
-                className={`flex items-center justify-center p-2 transition-all duration-300 group rounded-full ${isAtTop ? 'text-white/90 hover:text-white hover:bg-white/10' : 'text-gray-500 hover:text-[#D4AF37] hover:bg-gray-100'
-                  }`}
-                aria-label={getText("home.header.loginAriaLabel", "Iniciar Sesión", locale)}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 transition-transform duration-300 group-hover:scale-110">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </Link>
 
             </div>
           </div>
@@ -491,15 +480,11 @@ export default function Home() {
               <ExperienciasSection locale={locale} />
             </div>
           </div>
-          <div id="testimonios">
-            <TestimoniosSection locale={locale} />
+          <div id="confianza">
+            <ConfianzaSection locale={locale} />
           </div>
+          <ClosingCta locale={locale} />
         </div>
-        {/*
-          Sección intermedia (oculta por ahora):
-          Endless Group / "Lujo hecho a medida..."
-        */}
-        {/* <IntroSection /> */}
         <div
           className={`relative z-10 transition-all duration-[1050ms] ease-[cubic-bezier(0.22,1,0.36,1)] delay-150 ${
             mobileGateOpen && mobileGateReveal
@@ -512,6 +497,7 @@ export default function Home() {
         </div>
       </main>
 
+      <WhatsAppFab locale={locale} />
     </div >
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { getText, getValue, Locale } from "@/lib/i18n";
+import { whatsappLink, WhatsAppContext } from "@/lib/whatsapp";
 
 interface Experience {
   id: number;
@@ -59,6 +59,14 @@ const experienceMediaById: Record<number, Pick<Experience, "video" | "poster">> 
   1: { video: "/herosection/2v.mp4", poster: "/herosection/2.jpeg" },
   2: { video: "/herosection/3v.mp4", poster: "/herosection/3.jpeg" },
   3: { video: "/herosection/1v.mp4", poster: "/herosection/1.jpeg" },
+};
+
+// Cada vertical abre WhatsApp con su propio mensaje pre-rellenado.
+const CONTEXT_BY_ID: Record<number, WhatsAppContext> = {
+  0: "travels",
+  1: "lifestyle",
+  2: "business",
+  3: "capital",
 };
 
 type ExperienciasSectionProps = {
@@ -214,8 +222,10 @@ export default function ExperienciasSection({ locale }: ExperienciasSectionProps
 
                   {/* CTA */}
                   <div>
-                    <Link
-                      href="/contacto"
+                    <a
+                      href={whatsappLink(CONTEXT_BY_ID[exp.id] ?? "general", locale)}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="inline-flex items-center gap-3 group"
                     >
                       <span className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center group-hover:bg-[#D4AF37] group-hover:border-[#D4AF37] group-hover:text-black transition-all duration-300">
@@ -226,7 +236,7 @@ export default function ExperienciasSection({ locale }: ExperienciasSectionProps
                       <span className="text-xs uppercase tracking-[0.2em] text-white group-hover:text-[#D4AF37] transition-colors">
                         {exp.cta ?? getText("home.experiencias.items.0.cta", "Explorar", locale)}
                       </span>
-                    </Link>
+                    </a>
                   </div>
                 </div>
               </div>
