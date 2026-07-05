@@ -16,8 +16,13 @@ const inter = Inter({
   display: "swap",
 });
 
-// Dominio canónico para OG/canonical. Ajustar con NEXT_PUBLIC_SITE_URL en Vercel.
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://endless-group.vercel.app";
+// Dominio canónico para OG/canonical. Prioridad: dominio propio (NEXT_PUBLIC_SITE_URL,
+// p. ej. the8lifestyle.com) → dominio de producción de Vercel → localhost en dev.
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
 const OG_TITLE = getText("metadata.title", "Endless Group - Experiencias de Lujo");
 const OG_DESCRIPTION = getText(
   "metadata.description",
